@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#f3f5f8" id="meta-theme-color" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <script>
+    (function () {
+      try {
+        var p = new URLSearchParams(window.location.search).get('theme');
+        var s = JSON.parse(localStorage.getItem('super_study_state_v1') || 'null');
+        var prefDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var theme = (p === 'dark' || p === 'light')
+          ? p
+          : (s && (s.theme === 'dark' || s.theme === 'light') ? s.theme : (prefDark ? 'dark' : 'light'));
+        document.documentElement.setAttribute('data-theme', theme);
+        var meta = document.getElementById('meta-theme-color');
+        if (meta) meta.setAttribute('content', theme === 'dark' ? '#12161c' : '#f3f5f8');
+      } catch (e) {}
+    })();
+  </script>
+  <title>Super Study — NEET Organic Chemistry & Custom Subject Mastery</title>
+  <meta name="description" content="Interactive GitHub Pages study platform for NEET Organic Chemistry (NCERT Class 11 & 12 reactions, curved-arrow mechanisms, leaving group & reagent trends, and Gemini AI custom quizzes) plus multi-subject custom study tools." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Utility Header -->
+    <header class="topbar" role="banner">
+      <div class="topbar-inner">
+        <div class="brand-cluster">
+          <a href="#explorer" class="brand-mark" id="brand-home-link" aria-label="Super Study Home">
+            <span class="brand-hex" aria-hidden="true">
+              <svg viewBox="0 0 32 32" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round">
+                <polygon points="16,3 27,9.5 27,22.5 16,29 5,22.5 5,9.5" />
+                <circle cx="16" cy="16" r="6" stroke-dasharray="3 2.5" />
+              </svg>
+            </span>
+            <span class="brand-text">
+              <span class="brand-name">Super Study</span>
+              <span class="brand-sub">NCERT Mastery Lab</span>
+            </span>
+          </a>
+
+          <div class="subject-switcher-wrap">
+            <label for="subject-switcher" class="sr-only">Select Study Subject</label>
+            <select id="subject-switcher" class="subject-select" aria-label="Select Study Subject"></select>
+          </div>
+        </div>
+
+        <div class="search-cluster">
+          <div class="search-box">
+            <svg class="search-icon" viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="9" cy="9" r="6" />
+              <line x1="13.5" y1="13.5" x2="17.5" y2="17.5" stroke-linecap="round" />
+            </svg>
+            <input
+              type="search"
+              id="global-search-input"
+              placeholder="Search reactions, reagents (e.g. PCC, O3, Lindlar), or exceptions..."
+              autocomplete="off"
+              aria-label="Global search"
+            />
+            <kbd class="shortcut-hint" aria-hidden="true">/</kbd>
+          </div>
+        </div>
+
+        <div class="utility-cluster">
+          <div class="mask-segmented" role="group" aria-label="Active Recall Mask Mode">
+            <button type="button" class="mask-btn active" data-mask="none" id="mask-none-btn" title="Show full reaction equations">Show All</button>
+            <button type="button" class="mask-btn" data-mask="product" id="mask-product-btn" title="Hide products for active recall">Hide Product</button>
+            <button type="button" class="mask-btn" data-mask="reagent" id="mask-reagent-btn" title="Hide reagents for active recall">Hide Reagent</button>
+          </div>
+
+          <button type="button" class="icon-pill-btn" id="open-gemini-settings-btn" title="Configure GEMINI_API_KEY and model">
+            <span class="status-dot" id="gemini-status-dot" aria-hidden="true"></span>
+            <span>Gemini API</span>
+          </button>
+
+          <button type="button" class="icon-pill-btn theme-quick-btn" id="theme-toggle-btn" title="Quick Dark / Light Mode (Shortcut: D)" aria-label="Toggle Dark or Light Mode">
+            <span id="theme-toggle-icon" aria-hidden="true">🌙</span>
+            <span id="theme-toggle-label">Dark</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Primary Workspace Navigation -->
+      <nav class="primary-nav" aria-label="Primary Workspace">
+        <div class="primary-nav-inner">
+          <button type="button" class="nav-tab active" data-tab="explorer" id="tab-explorer">
+            Reaction &amp; Mechanism Explorer
+          </button>
+          <button type="button" class="nav-tab" data-tab="trends" id="tab-trends">
+            Trends, Leaving Groups &amp; Reagents
+          </button>
+          <button type="button" class="nav-tab" data-tab="converter" id="tab-converter">
+            Interconversion Finder (X → Y)
+          </button>
+          <button type="button" class="nav-tab" data-tab="drills" id="tab-drills">
+            Active-Recall Drills
+          </button>
+          <button type="button" class="nav-tab" data-tab="quiz" id="tab-quiz">
+            Gemini AI Question Lab
+          </button>
+          <button type="button" class="nav-tab" data-tab="studio" id="tab-studio">
+            Custom Subjects &amp; Mastery
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Main Dynamic Workspace -->
+    <main class="workspace" id="workspace-root">
+      <!-- Populated dynamically by js/app.js -->
+    </main>
+  </div>
+
+  <!-- Interactive SVG Mechanism Player Modal -->
+  <div class="modal-backdrop" id="mechanism-modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="mech-modal-title">
+    <div class="modal-dialog modal-xl mechanism-dialog">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-eyebrow" id="mech-modal-eyebrow">NCERT Mechanism Walkthrough</div>
+          <h2 id="mech-modal-title">Reaction Mechanism</h2>
+        </div>
+        <div class="modal-header-actions">
+          <button type="button" class="btn-outline btn-sm" id="mech-bookmark-btn">Bookmark</button>
+          <button type="button" class="modal-close-btn" id="close-mech-modal-btn" aria-label="Close mechanism player">✕</button>
+        </div>
+      </div>
+      <div class="modal-body" id="mech-modal-body">
+        <!-- Rendered by mechanism-player.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Gemini API & Settings Modal -->
+  <div class="modal-backdrop" id="settings-modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
+    <div class="modal-dialog modal-md">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-eyebrow">Client-Side AI &amp; Storage</div>
+          <h2 id="settings-modal-title">Gemini API Configuration</h2>
+        </div>
+        <button type="button" class="modal-close-btn" id="close-settings-modal-btn" aria-label="Close settings modal">✕</button>
+      </div>
+      <div class="modal-body" id="settings-modal-body">
+        <p class="muted-note">
+          Your <code>GEMINI_API_KEY</code> is stored exclusively in your browser's <code>localStorage</code> and sent directly from your browser to Google's Generative Language API. It is never uploaded to GitHub or any third-party server.
+        </p>
+
+        <form id="gemini-settings-form" class="settings-form">
+          <div class="form-field">
+            <label for="gemini-api-key-input">GEMINI_API_KEY</label>
+            <div class="password-row">
+              <input
+                type="password"
+                id="gemini-api-key-input"
+                placeholder="AIzaSy..."
+                autocomplete="off"
+              />
+              <button type="button" class="btn-outline btn-sm" id="toggle-key-visibility-btn">Show</button>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="gemini-model-select">Gemini Model</label>
+            <select id="gemini-model-select">
+              <option value="gemini-2.5-flash">gemini-2.5-flash (Recommended — Fast &amp; Accurate)</option>
+              <option value="gemini-2.5-pro">gemini-2.5-pro (Deep Multi-Step Mechanisms)</option>
+              <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+              <option value="custom">Custom / Experimental Model ID (e.g. hydrogen / preview)</option>
+            </select>
+          </div>
+
+          <div class="form-field" id="custom-model-id-group" hidden>
+            <label for="gemini-custom-model-input">Custom Model ID</label>
+            <input
+              type="text"
+              id="gemini-custom-model-input"
+              placeholder="e.g. gemini-2.5-flash-preview or custom model string"
+            />
+          </div>
+
+          <div class="settings-feedback" id="settings-feedback" hidden></div>
+
+          <div class="form-actions">
+            <button type="button" class="btn-outline" id="test-gemini-btn">Test Connection</button>
+            <button type="button" class="btn-danger-ghost" id="clear-gemini-btn">Clear Key</button>
+            <button type="submit" class="btn-primary" id="save-gemini-btn">Save Configuration</button>
+          </div>
+        </form>
+
+        <hr class="divider" />
+
+        <div class="backup-section">
+          <h3>Study Data Backup (JSON)</h3>
+          <p class="muted-note">Export your mastery progress, bookmarks, custom subjects, and custom reactions as a JSON file, or restore a saved backup.</p>
+          <div class="form-actions">
+            <button type="button" class="btn-outline" id="export-data-btn">Export Progress &amp; Custom Data</button>
+            <label class="btn-outline file-upload-label" for="import-data-input">
+              Import JSON Backup
+              <input type="file" id="import-data-input" accept=".json,application/json" hidden />
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-region" id="toast-region" aria-live="polite"></div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
