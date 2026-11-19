@@ -5,6 +5,7 @@
  */
 
 import { askMechanismTutor } from '../services/gemini.js';
+import { renderMarkdown, renderInlineMarkdown } from '../services/markdown.js';
 
 let autoPlayTimer = null;
 
@@ -205,8 +206,8 @@ export function openMechanismPlayer({ reaction, isBookmarked, onToggleBookmark }
           </div>
 
           <div class="mech-step-notes">
-            <h4>${escapeHtml(step.stepTitle)}</h4>
-            <p>${escapeHtml(step.description)}</p>
+            <h4>${renderInlineMarkdown(step.stepTitle)}</h4>
+            <p>${renderInlineMarkdown(step.description)}</p>
           </div>
         </div>
 
@@ -225,17 +226,17 @@ export function openMechanismPlayer({ reaction, isBookmarked, onToggleBookmark }
             <div class="callout-list">
               <div class="callout-row">
                 <span class="callout-key">RDS / Rate:</span>
-                <span>${escapeHtml(reaction.rds || 'Check step annotations')}</span>
+                <span>${renderInlineMarkdown(reaction.rds || 'Check step annotations')}</span>
               </div>
               <div class="callout-row">
                 <span class="callout-key">Stereo:</span>
-                <span>${escapeHtml(reaction.stereochemistry || 'Standard')}</span>
+                <span>${renderInlineMarkdown(reaction.stereochemistry || 'Standard')}</span>
               </div>
               ${
                 reaction.rearrangementAlert
                   ? `<div class="callout-row alert-warn">
                        <span class="callout-key">Alert:</span>
-                       <span>${escapeHtml(reaction.rearrangementAlert)}</span>
+                       <span>${renderInlineMarkdown(reaction.rearrangementAlert)}</span>
                      </div>`
                   : ''
               }
@@ -243,7 +244,7 @@ export function openMechanismPlayer({ reaction, isBookmarked, onToggleBookmark }
                 reaction.ncertExceptions
                   ? `<div class="callout-row alert-exception">
                        <span class="callout-key">NCERT Trap:</span>
-                       <span>${escapeHtml(reaction.ncertExceptions)}</span>
+                       <span>${renderInlineMarkdown(reaction.ncertExceptions)}</span>
                      </div>`
                   : ''
               }
@@ -263,7 +264,7 @@ export function openMechanismPlayer({ reaction, isBookmarked, onToggleBookmark }
               <input type="text" id="tutor-question-input" placeholder="Ask a custom what-if question..." style="flex:1; padding:7px 10px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-surface); font-size:0.84rem;" />
               <button type="button" class="btn-primary btn-sm" id="tutor-ask-btn">Ask</button>
             </div>
-            <div id="tutor-reply-box" class="tutor-reply" hidden></div>
+            <div id="tutor-reply-box" class="tutor-reply md-content" hidden></div>
           </div>
         </aside>
       </div>
@@ -329,7 +330,7 @@ export function openMechanismPlayer({ reaction, isBookmarked, onToggleBookmark }
       askBtn.disabled = true;
       try {
         const answer = await askMechanismTutor({ reaction, userQuestion: questionText.trim() });
-        replyBox.textContent = answer;
+        replyBox.innerHTML = renderMarkdown(answer);
       } catch (err) {
         replyBox.textContent = `⚠ ${err.message}`;
       } finally {

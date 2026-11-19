@@ -6,6 +6,7 @@
 
 import { OFFLINE_QUESTIONS } from '../data/offline-questions.js';
 import { generateCustomQuestions, callGeminiApi } from '../services/gemini.js';
+import { renderMarkdown, renderInlineMarkdown } from '../services/markdown.js';
 import { loadGeminiConfig, getResolvedModelId } from '../services/storage.js';
 
 function escapeHtml(str) {
@@ -185,7 +186,7 @@ export function renderGeminiQuizView(
                     </div>
                   </div>
 
-                  <div style="font-size:0.98rem; font-weight:600; white-space:pre-line; line-height:1.55;">${escapeHtml(q.question)}</div>
+                  <div class="question-stem md-content" style="font-size:0.98rem; font-weight:600; line-height:1.55;">${renderMarkdown(q.question)}</div>
 
                   <div class="option-list">
                     ${q.options
@@ -203,7 +204,7 @@ export function renderGeminiQuizView(
                           <div style="display:flex; gap:6px; align-items:stretch;">
                             <button type="button" class="${cls}" data-qid="${escapeHtml(q.id)}" data-oidx="${oIdx}" ${isAnswered ? 'disabled' : ''}>
                               <span class="option-letter">${letter}</span>
-                              <span style="flex:1;">${escapeHtml(opt)}</span>
+                              <span style="flex:1;">${renderInlineMarkdown(opt)}</span>
                             </button>
                             ${
                               !isAnswered
@@ -220,14 +221,14 @@ export function renderGeminiQuizView(
                       ? `<div class="callout-list" style="margin-top:4px;">
                            <div class="callout-row ${chosen === q.correctIndex ? 'alert-warn' : 'alert-exception'}" style="${chosen === q.correctIndex ? 'background:var(--chem-lg-soft);' : ''}">
                              <span class="callout-key">${chosen === q.correctIndex ? '✓ Correct:' : '✕ Incorrect:'}</span>
-                             <span>${escapeHtml(q.explanation)}</span>
+                             <div class="md-content" style="flex:1;">${renderMarkdown(q.explanation)}</div>
                            </div>
 
                            <div style="display:flex; gap:8px; margin-top:6px; flex-wrap:wrap;">
                              <input type="text" class="followup-input" data-qid="${escapeHtml(q.id)}" placeholder="Ask Gemini why another option is wrong or a follow-up doubt..." style="flex:1; min-width:220px; padding:7px 10px; border-radius:8px; border:1px solid var(--border-strong); background:var(--bg-surface); font-size:0.84rem;" />
                              <button type="button" class="btn-outline btn-sm followup-ask-btn" data-qid="${escapeHtml(q.id)}">Ask Gemini</button>
                            </div>
-                           ${follow ? `<div class="tutor-reply">${escapeHtml(follow.answer)}</div>` : ''}
+                           ${follow ? `<div class="tutor-reply md-content">${renderMarkdown(follow.answer)}</div>` : ''}
                          </div>`
                       : ''
                   }

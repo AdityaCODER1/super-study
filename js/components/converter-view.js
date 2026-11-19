@@ -5,6 +5,7 @@
  */
 
 import { callGeminiApi } from '../services/gemini.js';
+import { renderMarkdown } from '../services/markdown.js';
 
 const CANONICAL_GROUPS = [
   'Alkane',
@@ -307,7 +308,7 @@ export function renderConverterView(container, { reactions, onInspectReaction })
         </div>
         ${
           customAiResponse
-            ? `<div class="tutor-reply" style="margin-top:8px;">${escapeHtml(customAiResponse)}</div>`
+            ? `<div class="tutor-reply md-content" style="margin-top:8px;">${renderMarkdown(customAiResponse)}</div>`
             : ''
         }
       </div>

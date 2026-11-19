@@ -18,6 +18,7 @@ import {
   importBackupJson
 } from './services/storage.js';
 import { testGeminiConnection } from './services/gemini.js';
+import { renderInlineMarkdown } from './services/markdown.js';
 import { openMechanismPlayer, stopMechanismAutoPlay } from './components/mechanism-player.js';
 import { renderTrendsView } from './components/trends-view.js';
 import { renderConverterView } from './components/converter-view.js';
@@ -440,13 +441,13 @@ function renderExplorerView(container, subject, reactions) {
                          <div class="callout-list">
                            <div class="callout-row">
                              <span class="callout-key">RDS / Key Rule:</span>
-                             <span>${escapeHtml(r.rds)}</span>
+                             <span>${renderInlineMarkdown(r.rds)}</span>
                            </div>
                            ${
                              r.rearrangementAlert
                                ? `<div class="callout-row alert-warn">
                                     <span class="callout-key">Alert:</span>
-                                    <span>${escapeHtml(r.rearrangementAlert)}</span>
+                                    <span>${renderInlineMarkdown(r.rearrangementAlert)}</span>
                                   </div>`
                                : ''
                            }
@@ -454,7 +455,7 @@ function renderExplorerView(container, subject, reactions) {
                              r.ncertExceptions
                                ? `<div class="callout-row alert-exception">
                                     <span class="callout-key">NCERT Trap:</span>
-                                    <span>${escapeHtml(r.ncertExceptions)}</span>
+                                    <span>${renderInlineMarkdown(r.ncertExceptions)}</span>
                                   </div>`
                                : ''
                            }

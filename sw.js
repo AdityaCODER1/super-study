@@ -4,7 +4,7 @@
  * for instant standalone Home Screen launch and 100% offline study support.
  */
 
-const CACHE_NAME = 'super-study-pwa-v1';
+const CACHE_NAME = 'super-study-pwa-v2';
 
 const PRECACHE_ASSETS = [
   './',
@@ -24,6 +24,7 @@ const PRECACHE_ASSETS = [
   './js/data/subjects.js',
   './js/data/trends-reagents.js',
   './js/services/gemini.js',
+  './js/services/markdown.js',
   './js/services/storage.js',
   './icons/icon.svg',
   './icons/apple-touch-icon.png',

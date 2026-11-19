@@ -2,6 +2,8 @@
  * Active-Recall Flashcard & Spaced-Repetition Drill Arena
  */
 
+import { renderInlineMarkdown } from '../services/markdown.js';
+
 function escapeHtml(str) {
   return String(str ?? '')
     .replace(/&/g, '&amp;')
@@ -115,10 +117,10 @@ export function renderDrillView(container, { reactions, mastery, onUpdateMastery
           ${
             showException
               ? `<div class="callout-list">
-                   <div class="callout-row"><span class="callout-key">RDS / Rate:</span><span>${escapeHtml(rxn.rds)}</span></div>
-                   <div class="callout-row"><span class="callout-key">Stereochemistry:</span><span>${escapeHtml(rxn.stereochemistry)}</span></div>
-                   ${rxn.rearrangementAlert ? `<div class="callout-row alert-warn"><span class="callout-key">Alert:</span><span>${escapeHtml(rxn.rearrangementAlert)}</span></div>` : ''}
-                   ${rxn.ncertExceptions ? `<div class="callout-row alert-exception"><span class="callout-key">NCERT Exception:</span><span>${escapeHtml(rxn.ncertExceptions)}</span></div>` : ''}
+                   <div class="callout-row"><span class="callout-key">RDS / Rate:</span><span>${renderInlineMarkdown(rxn.rds)}</span></div>
+                   <div class="callout-row"><span class="callout-key">Stereochemistry:</span><span>${renderInlineMarkdown(rxn.stereochemistry)}</span></div>
+                   ${rxn.rearrangementAlert ? `<div class="callout-row alert-warn"><span class="callout-key">Alert:</span><span>${renderInlineMarkdown(rxn.rearrangementAlert)}</span></div>` : ''}
+                   ${rxn.ncertExceptions ? `<div class="callout-row alert-exception"><span class="callout-key">NCERT Exception:</span><span>${renderInlineMarkdown(rxn.ncertExceptions)}</span></div>` : ''}
                  </div>`
               : `<div class="callout-row" style="justify-content:center; padding:16px; color:var(--text-muted);">
                    Recall the RDS, stereochemistry, and NCERT traps before clicking Reveal.
