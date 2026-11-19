@@ -6,6 +6,12 @@
   <meta name="theme-color" content="#f3f5f8" id="meta-theme-color" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" id="meta-apple-status-bar" />
+  <meta name="apple-mobile-web-app-title" content="Super Study" />
+  <meta name="application-name" content="Super Study" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png" />
   <script>
     (function () {
       try {
@@ -76,6 +82,14 @@
             <button type="button" class="mask-btn" data-mask="product" id="mask-product-btn" title="Hide products for active recall">Hide Product</button>
             <button type="button" class="mask-btn" data-mask="reagent" id="mask-reagent-btn" title="Hide reagents for active recall">Hide Reagent</button>
           </div>
+
+          <button type="button" class="icon-pill-btn install-app-btn" id="install-app-btn" title="Install Super Study to your Home Screen or Desktop for full-screen windowless study" aria-label="Install Super Study App">
+            <svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M10 3v9m0 0l-3.5-3.5M10 12l3.5-3.5" />
+              <path d="M4 14.5v1.2A1.3 1.3 0 005.3 17h9.4a1.3 1.3 0 001.3-1.3v-1.2" />
+            </svg>
+            <span id="install-app-label">Install App</span>
+          </button>
 
           <button type="button" class="icon-pill-btn" id="open-gemini-settings-btn" title="Configure GEMINI_API_KEY and model">
             <span class="status-dot" id="gemini-status-dot" aria-hidden="true"></span>
@@ -208,6 +222,78 @@
               <input type="file" id="import-data-input" accept=".json,application/json" hidden />
             </label>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Install to Home Screen / Standalone Web App Modal -->
+  <div class="modal-backdrop" id="install-modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="install-modal-title">
+    <div class="modal-dialog modal-md">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-eyebrow">Full-Screen Standalone App &amp; Offline Mode</div>
+          <h2 id="install-modal-title">Install Super Study to Home Screen</h2>
+        </div>
+        <button type="button" class="modal-close-btn" id="close-install-modal-btn" aria-label="Close install modal">✕</button>
+      </div>
+      <div class="modal-body" id="install-modal-body">
+        <div class="install-hero-banner">
+          <img src="./icons/icon-192.png" alt="Super Study App Icon" class="install-app-preview-icon" width="52" height="52" />
+          <div class="install-hero-copy">
+            <strong>Seamless Study Without the Browser Window</strong>
+            <p class="muted-note">
+              Launch Super Study directly from your Home Screen or Dock in its own dedicated full-screen window—with zero browser tabs, no URL bar, and 100% offline access to all NCERT Class 11 &amp; 12 reactions, mechanisms, trends, and offline NEET questions.
+            </p>
+          </div>
+        </div>
+
+        <div class="install-native-cta" id="install-native-cta" hidden>
+          <button type="button" class="btn-primary install-cta-full" id="trigger-native-install-btn">
+            📲 Install Super Study Now (One-Click)
+          </button>
+        </div>
+
+        <div class="install-platform-grid">
+          <div class="install-platform-card" id="install-card-ios">
+            <div class="install-platform-header">
+              <span class="install-platform-title">iPhone &amp; iPad (Safari)</span>
+              <span class="pill-badge" id="badge-ios-detected" hidden>Your Device</span>
+            </div>
+            <ol class="install-step-list">
+              <li>Tap the <strong>Share</strong> button <span class="install-kbd" aria-label="Share icon">⎋</span> in Safari’s bottom or top bar.</li>
+              <li>Scroll down the share sheet and tap <strong>Add to Home Screen</strong>.</li>
+              <li>Tap <strong>Add</strong> in the top-right corner to install the standalone app icon.</li>
+            </ol>
+          </div>
+
+          <div class="install-platform-card" id="install-card-android">
+            <div class="install-platform-header">
+              <span class="install-platform-title">Android (Chrome / Edge)</span>
+              <span class="pill-badge" id="badge-android-detected" hidden>Your Device</span>
+            </div>
+            <ol class="install-step-list">
+              <li>Tap the one-click <strong>Install</strong> prompt, or tap the browser menu <span class="install-kbd">⋮</span> in the top-right corner.</li>
+              <li>Select <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
+              <li>Confirm to place <strong>Super Study</strong> directly on your Home Screen.</li>
+            </ol>
+          </div>
+
+          <div class="install-platform-card" id="install-card-desktop">
+            <div class="install-platform-header">
+              <span class="install-platform-title">Desktop (Chrome, Edge &amp; macOS Safari)</span>
+              <span class="pill-badge" id="badge-desktop-detected" hidden>Your Device</span>
+            </div>
+            <ol class="install-step-list">
+              <li><strong>Chrome / Edge:</strong> Click the <strong>Install Super Study</strong> icon inside the right edge of the address bar.</li>
+              <li><strong>Safari on Mac:</strong> Click <strong>File → Add to Dock…</strong> from the top menu bar.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="install-status-footer">
+          <span class="status-dot connected" id="sw-offline-dot" aria-hidden="true"></span>
+          <span id="sw-offline-status-text" class="muted-note">Offline study cache active — reactions, mechanisms &amp; drills work even without internet.</span>
         </div>
       </div>
     </div>

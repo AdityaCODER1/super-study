@@ -36,6 +36,106 @@ let selectedChapterFilter = 'all';
 let selectedMechFilter = 'All Categories';
 let selectedClassFilter = 'all'; // 'all' | '11' | '12'
 
+// PWA Install state
+let deferredInstallPrompt = null;
+
+function isStandaloneDisplayMode() {
+  return (
+    (window.matchMedia &&
+      (window.matchMedia('(display-mode: standalone)').matches ||
+        window.matchMedia('(display-mode: fullscreen)').matches ||
+        window.matchMedia('(display-mode: window-controls-overlay)').matches)) ||
+    window.navigator.standalone === true
+  );
+}
+
+function detectClientPlatform() {
+  const ua = navigator.userAgent || '';
+  const isIOS =
+    /iPad|iPhone|iPod/i.test(ua) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (isIOS) return 'ios';
+  if (/Android/i.test(ua)) return 'android';
+  return 'desktop';
+}
+
+function syncInstallAppUi() {
+  const standalone = isStandaloneDisplayMode();
+  document.documentElement.toggleAttribute('data-standalone', standalone);
+
+  const installBtn = document.getElementById('install-app-btn');
+  const nativeCta = document.getElementById('install-native-cta');
+  if (installBtn) {
+    installBtn.hidden = standalone;
+    installBtn.classList.toggle('install-ready', Boolean(deferredInstallPrompt));
+  }
+  if (nativeCta) {
+    nativeCta.hidden = !deferredInstallPrompt || standalone;
+  }
+}
+
+function openInstallModal() {
+  const backdrop = document.getElementById('install-modal-backdrop');
+  if (!backdrop) return;
+
+  const platform = detectClientPlatform();
+  const map = {
+    ios: { card: 'install-card-ios', badge: 'badge-ios-detected' },
+    android: { card: 'install-card-android', badge: 'badge-android-detected' },
+    desktop: { card: 'install-card-desktop', badge: 'badge-desktop-detected' }
+  };
+
+  Object.entries(map).forEach(([key, ids]) => {
+    const cardEl = document.getElementById(ids.card);
+    const badgeEl = document.getElementById(ids.badge);
+    const isCurrent = key === platform;
+    if (cardEl) cardEl.classList.toggle('active-platform', isCurrent);
+    if (badgeEl) badgeEl.hidden = !isCurrent;
+  });
+
+  syncInstallAppUi();
+  backdrop.hidden = false;
+}
+
+async function triggerNativeInstallPrompt() {
+  if (!deferredInstallPrompt) {
+    openInstallModal();
+    return;
+  }
+  try {
+    deferredInstallPrompt.prompt();
+    const choiceResult = await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    syncInstallAppUi();
+    if (choiceResult && choiceResult.outcome === 'accepted') {
+      const backdrop = document.getElementById('install-modal-backdrop');
+      if (backdrop) backdrop.hidden = true;
+    }
+  } catch (err) {
+    deferredInstallPrompt = null;
+    syncInstallAppUi();
+    openInstallModal();
+  }
+}
+
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker
+    .register('./sw.js', { scope: './' })
+    .then(() => {
+      const dot = document.getElementById('sw-offline-dot');
+      const txt = document.getElementById('sw-offline-status-text');
+      if (dot) dot.classList.add('connected');
+      if (txt) {
+        txt.textContent =
+          'Offline study cache active — all NCERT reactions, mechanisms & drills work offline.';
+      }
+    })
+    .catch(() => {
+      // Service worker unavailable (e.g. file:// protocol)
+    });
+}
+
 function escapeHtml(str) {
   return String(str ?? '')
     .replace(/&/g, '&amp;')
@@ -77,9 +177,11 @@ function applyTheme() {
   const icon = document.getElementById('theme-toggle-icon');
   const label = document.getElementById('theme-toggle-label');
   const metaTheme = document.getElementById('meta-theme-color');
+  const metaAppleBar = document.getElementById('meta-apple-status-bar');
   if (icon) icon.textContent = isDark ? '☀' : '🌙';
   if (label) label.textContent = isDark ? 'Light' : 'Dark';
   if (metaTheme) metaTheme.setAttribute('content', isDark ? '#12161c' : '#f3f5f8');
+  if (metaAppleBar) metaAppleBar.setAttribute('content', isDark ? 'black-translucent' : 'default');
 }
 
 function toggleTheme() {
@@ -614,8 +716,62 @@ function initEventListeners() {
       stopMechanismAutoPlay();
       document.getElementById('mechanism-modal-backdrop').hidden = true;
       document.getElementById('settings-modal-backdrop').hidden = true;
+      const installBackdrop = document.getElementById('install-modal-backdrop');
+      if (installBackdrop) installBackdrop.hidden = true;
     }
   });
+
+  // PWA Install App button & modal listeners
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    syncInstallAppUi();
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    syncInstallAppUi();
+    const installBackdrop = document.getElementById('install-modal-backdrop');
+    if (installBackdrop) installBackdrop.hidden = true;
+    showToast('Super Study installed! Launch it anytime from your Home Screen.');
+  });
+
+  if (window.matchMedia) {
+    const standaloneQuery = window.matchMedia('(display-mode: standalone)');
+    if (standaloneQuery.addEventListener) {
+      standaloneQuery.addEventListener('change', syncInstallAppUi);
+    }
+  }
+
+  const installAppBtn = document.getElementById('install-app-btn');
+  if (installAppBtn) {
+    installAppBtn.addEventListener('click', () => {
+      if (deferredInstallPrompt) {
+        triggerNativeInstallPrompt();
+      } else {
+        openInstallModal();
+      }
+    });
+  }
+
+  const triggerNativeBtn = document.getElementById('trigger-native-install-btn');
+  if (triggerNativeBtn) {
+    triggerNativeBtn.addEventListener('click', triggerNativeInstallPrompt);
+  }
+
+  const closeInstallModalBtn = document.getElementById('close-install-modal-btn');
+  if (closeInstallModalBtn) {
+    closeInstallModalBtn.addEventListener('click', () => {
+      document.getElementById('install-modal-backdrop').hidden = true;
+    });
+  }
+
+  const installModalBackdrop = document.getElementById('install-modal-backdrop');
+  if (installModalBackdrop) {
+    installModalBackdrop.addEventListener('click', (e) => {
+      if (e.target.id === 'install-modal-backdrop') e.target.hidden = true;
+    });
+  }
 
   // Masking toggles
   document.querySelectorAll('.mask-btn').forEach((btn) => {
@@ -747,6 +903,8 @@ function bootstrap() {
 
   applyTheme();
   syncGeminiStatusDot();
+  syncInstallAppUi();
+  registerServiceWorker();
   populateSubjectSwitcher();
   initEventListeners();
 

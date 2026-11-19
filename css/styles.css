@@ -1563,3 +1563,170 @@ code, .mono {
   }
 }
 
+/* ==========================================================================
+   PWA Install App Button, Home Screen Modal & Standalone Window Mode
+   ========================================================================== */
+
+.install-app-btn {
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  background: var(--accent-primary-soft);
+}
+
+.install-app-btn:hover {
+  background: var(--accent-primary);
+  color: #ffffff;
+}
+
+.install-app-btn.install-ready {
+  background: var(--accent-primary);
+  color: #ffffff;
+  border-color: var(--accent-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.install-app-btn.install-ready:hover {
+  background: var(--accent-primary-hover);
+}
+
+.install-hero-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 14px;
+}
+
+.install-app-preview-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.install-hero-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.install-hero-copy strong {
+  font-size: 0.94rem;
+  color: var(--text-primary);
+}
+
+.install-native-cta {
+  margin-bottom: 14px;
+}
+
+.install-cta-full {
+  width: 100%;
+  justify-content: center;
+  padding: 11px 16px;
+  font-size: 0.92rem;
+}
+
+.install-platform-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.install-platform-card {
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.install-platform-card.active-platform {
+  border-color: var(--accent-primary);
+  background: var(--accent-primary-soft);
+}
+
+.install-platform-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.install-platform-title {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--text-primary);
+}
+
+.install-step-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.install-kbd {
+  display: inline-block;
+  padding: 0 5px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  color: var(--text-primary);
+}
+
+.install-status-footer {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Standalone Installed App Mode (Windowless Home Screen / Dock Launch) */
+@media (display-mode: standalone), (display-mode: fullscreen), (display-mode: window-controls-overlay) {
+  html, body {
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .topbar {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+
+  .workspace {
+    padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+
+  .toast-region {
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .nav-tab,
+  .icon-pill-btn,
+  .mask-btn,
+  .mode-tab-btn,
+  .brand-mark {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  #install-app-btn {
+    display: none !important;
+  }
+}

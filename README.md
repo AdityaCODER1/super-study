@@ -27,10 +27,10 @@ A zero-build, static **GitHub Pages** study platform designed for customizable m
    - Generate custom **Single-Choice NEET MCQs**, **Assertion–Reason**, **Statement I & II**, and **Multi-Step $\text{A} \rightarrow \text{B} \rightarrow \text{C}$ Roadmaps** tailored to your selected chapters or tricky reactions.
    - Includes a 42-question **Built-in Offline NEET Bank** that works without any API key.
 
-6. **Multi-Subject, Quick Dark Mode & Phone-Ready Study Studio**
+6. **Multi-Subject, Quick Dark Mode & Standalone PWA (Home Screen App)**
    - Pre-configured subject switcher (Organic Chemistry, Inorganic Chemistry, Physical Chemistry, Biology, Physics) + create new custom subjects and cards manually or with Gemini, with full JSON Export/Import backup.
    - **Global Quick Dark Mode**: One-click **🌙 Dark / ☀ Light** toggle in the header (`D` keyboard shortcut on desktop) plus automatic OS dark/light detection on first visit.
-   - **Phone & Tablet Friendly**: Responsive single-column mobile cards, swipe-scrollable tabs, `16px` zoom-free inputs, and bookmarkable on iOS/Android Home Screen.
+   - **Installable Standalone Progressive Web App (PWA)**: Click **Install App** in the top navigation bar to install Super Study directly to your Android, iOS/iPadOS, or Desktop Home Screen / Dock. Launches in a dedicated full-screen window (`display: "standalone"`) without the browser address bar or tabs, backed by an offline-first Service Worker (`sw.js`).
 
 ## Live Website (GitHub Pages)
 

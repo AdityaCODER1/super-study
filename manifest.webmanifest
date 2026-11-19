@@ -1,0 +1,70 @@
+{
+  "id": "./",
+  "name": "Super Study — NEET Organic Chemistry & Custom Subject Mastery",
+  "short_name": "Super Study",
+  "description": "Interactive NEET Organic Chemistry (NCERT Class 11 & 12 reactions, curved-arrow mechanisms, leaving group & reagent trends, and Gemini AI custom quizzes) & multi-subject mastery platform.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#f3f5f8",
+  "theme_color": "#f3f5f8",
+  "categories": ["education", "productivity", "reference"],
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Reaction & Mechanism Explorer",
+      "short_name": "Explorer",
+      "description": "Browse NCERT Class 11 & 12 reactions and mechanisms",
+      "url": "./index.html#explorer",
+      "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Active-Recall Drills",
+      "short_name": "Drills",
+      "description": "Practice rapid active-recall flashcards",
+      "url": "./index.html#drills",
+      "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Gemini AI Question Lab",
+      "short_name": "Quiz Lab",
+      "description": "Practice offline & AI-generated NEET questions",
+      "url": "./index.html#quiz",
+      "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Trends, Leaving Groups & Reagents",
+      "short_name": "Trends",
+      "description": "Compare reagents, leaving groups, and chemical tests",
+      "url": "./index.html#trends",
+      "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}
