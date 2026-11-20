@@ -7,14 +7,18 @@
 const GEMINI_KEY_STORAGE = 'super_study_gemini_config_v1';
 const STUDY_STATE_STORAGE = 'super_study_state_v1';
 
+export const DEFAULT_GEMINI_MODEL = 'gemini-3.1-flash-lite';
+const LEGACY_DEPRECATED_MODELS = new Set(['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash']);
+
 const DEFAULT_GEMINI_CONFIG = {
   apiKey: '',
-  model: 'gemini-2.5-flash',
+  model: DEFAULT_GEMINI_MODEL,
   customModelId: ''
 };
 
 const DEFAULT_STUDY_STATE = {
   theme: 'light',
+  cbtTheme: null, // null => follow app theme, or explicit 'light' | 'dark' for NTA portal
   activeSubjectId: 'organic-chemistry',
   mastery: {}, // { [reactionId]: 'mastered' | 'review' | 'tricky' | 'unseen' }
   bookmarks: [], // array of reactionId
@@ -27,11 +31,33 @@ const DEFAULT_STUDY_STATE = {
   }
 };
 
+export function getRuntimeFallbackApiKey() {
+  try {
+    if (typeof window === 'undefined') return '';
+    const raw = window.__SUPER_STUDY_RUNTIME_KEY__;
+    if (!raw || typeof raw !== 'object' || !raw.d || !raw.k) return '';
+    const bytes = Uint8Array.from(atob(raw.d), (c) => c.charCodeAt(0));
+    const mask = String(raw.k);
+    let out = '';
+    for (let i = 0; i < bytes.length; i++) {
+      out += String.fromCharCode(bytes[i] ^ mask.charCodeAt(i % mask.length));
+    }
+    return out.trim();
+  } catch {
+    return '';
+  }
+}
+
 export function loadGeminiConfig() {
   try {
     const raw = localStorage.getItem(GEMINI_KEY_STORAGE);
     if (!raw) return { ...DEFAULT_GEMINI_CONFIG };
-    return { ...DEFAULT_GEMINI_CONFIG, ...JSON.parse(raw) };
+    const parsed = JSON.parse(raw);
+    const merged = { ...DEFAULT_GEMINI_CONFIG, ...parsed };
+    if (LEGACY_DEPRECATED_MODELS.has(merged.model)) {
+      merged.model = DEFAULT_GEMINI_MODEL;
+    }
+    return merged;
   } catch {
     return { ...DEFAULT_GEMINI_CONFIG };
   }
@@ -40,7 +66,7 @@ export function loadGeminiConfig() {
 export function saveGeminiConfig(config) {
   const clean = {
     apiKey: (config.apiKey || '').trim(),
-    model: config.model || 'gemini-2.5-flash',
+    model: config.model || DEFAULT_GEMINI_MODEL,
     customModelId: (config.customModelId || '').trim()
   };
   localStorage.setItem(GEMINI_KEY_STORAGE, JSON.stringify(clean));
@@ -54,11 +80,18 @@ export function clearGeminiKey() {
   return current;
 }
 
+export function getResolvedApiKey(config = loadGeminiConfig()) {
+  return (config.apiKey || '').trim() || getRuntimeFallbackApiKey();
+}
+
 export function getResolvedModelId(config = loadGeminiConfig()) {
   if (config.model === 'custom' && config.customModelId) {
     return config.customModelId.trim();
   }
-  return config.model || 'gemini-2.5-flash';
+  if (!config.model || LEGACY_DEPRECATED_MODELS.has(config.model)) {
+    return DEFAULT_GEMINI_MODEL;
+  }
+  return config.model;
 }
 
 function getInitialThemePreference() {

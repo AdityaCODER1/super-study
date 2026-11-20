@@ -4,7 +4,7 @@
  * for instant standalone Home Screen launch and 100% offline study support.
  */
 
-const CACHE_NAME = 'super-study-pwa-v2';
+const CACHE_NAME = 'super-study-pwa-v3';
 
 const PRECACHE_ASSETS = [
   './',
@@ -12,20 +12,31 @@ const PRECACHE_ASSETS = [
   './manifest.webmanifest',
   './css/styles.css',
   './js/app.js',
+  './js/runtime-config.js',
   './js/components/converter-view.js',
   './js/components/custom-studio.js',
   './js/components/drill-view.js',
   './js/components/gemini-quiz.js',
   './js/components/mechanism-player.js',
+  './js/components/nta-cbt-view.js',
+  './js/components/pdf-crop-modal.js',
   './js/components/trends-view.js',
+  './js/data/abhyas-bank.js',
+  './js/data/neet-papers.js',
+  './js/data/neet-syllabus.js',
   './js/data/offline-questions.js',
+  './js/data/pyq-bank.js',
   './js/data/reactions-class11.js',
   './js/data/reactions-class12.js',
   './js/data/subjects.js',
   './js/data/trends-reagents.js',
+  './js/services/cbt-storage.js',
   './js/services/gemini.js',
   './js/services/markdown.js',
+  './js/services/pdf-parser.js',
   './js/services/storage.js',
+  './js/vendor/pdf.min.mjs',
+  './js/vendor/pdf.worker.min.mjs',
   './icons/icon.svg',
   './icons/apple-touch-icon.png',
   './icons/icon-192.png',
@@ -86,13 +97,14 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Same-origin static assets & Google Fonts: Stale-While-Revalidate
+  // Same-origin static assets, Google Fonts, KaTeX/PDF.js CDN, and HF Paper Images: Stale-While-Revalidate
   const isSameOrigin = url.origin === self.location.origin;
   const isGoogleFonts =
     url.hostname.includes('fonts.googleapis.com') ||
     url.hostname.includes('fonts.gstatic.com');
+  const isCdnAsset = url.hostname.includes('cdn.jsdelivr.net');
 
-  if (isSameOrigin || isGoogleFonts) {
+  if (isSameOrigin || isGoogleFonts || isCdnAsset) {
     event.respondWith(
       caches.match(request).then((cachedResponse) => {
         const networkFetch = fetch(request)
@@ -106,7 +118,7 @@ self.addEventListener('fetch', (event) => {
             }
             return networkResponse;
           })
-          .catch(() => cachedResponse);
+          .catch(() => cachedResponse || Response.error());
 
         return cachedResponse || networkFetch;
       })

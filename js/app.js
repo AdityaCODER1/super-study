@@ -12,6 +12,8 @@ import {
   saveGeminiConfig,
   clearGeminiKey,
   getResolvedModelId,
+  getResolvedApiKey,
+  DEFAULT_GEMINI_MODEL,
   loadStudyState,
   saveStudyState,
   exportBackupJson,
@@ -25,11 +27,13 @@ import { renderConverterView } from './components/converter-view.js';
 import { renderDrillView } from './components/drill-view.js';
 import { renderGeminiQuizView } from './components/gemini-quiz.js';
 import { renderCustomStudioView } from './components/custom-studio.js';
+import { renderNtaCbtView } from './components/nta-cbt-view.js';
 
 let studyState = loadStudyState();
-let activeTab = 'explorer'; // 'explorer' | 'trends' | 'converter' | 'drills' | 'quiz' | 'studio'
+let activeTab = 'explorer'; // 'explorer' | 'trends' | 'converter' | 'drills' | 'quiz' | 'cbt' | 'studio'
 let maskMode = 'none'; // 'none' | 'product' | 'reagent'
 let searchQuery = '';
+let isNtaPortalActive = false;
 
 // Explorer filter state
 let explorerGroupMode = 'chapters'; // 'chapters' | 'mechanisms' | 'named' | 'bookmarked'
@@ -193,10 +197,9 @@ function toggleTheme() {
 }
 
 function syncGeminiStatusDot() {
-  const cfg = loadGeminiConfig();
   const dot = document.getElementById('gemini-status-dot');
   if (dot) {
-    dot.classList.toggle('connected', Boolean(cfg.apiKey));
+    dot.classList.toggle('connected', Boolean(getResolvedApiKey()));
   }
 }
 
@@ -254,7 +257,7 @@ function openSettingsModal() {
 
   const cfg = loadGeminiConfig();
   keyInput.value = cfg.apiKey || '';
-  modelSelect.value = cfg.model || 'gemini-2.5-flash';
+  modelSelect.value = cfg.model || DEFAULT_GEMINI_MODEL;
   customInput.value = cfg.customModelId || '';
   customGroup.hidden = modelSelect.value !== 'custom';
   feedback.hidden = true;
@@ -612,6 +615,19 @@ function renderActiveTab() {
       },
       onOpenSettings: openSettingsModal
     });
+  } else if (activeTab === 'cbt') {
+    renderNtaCbtView(root, {
+      initialCbtTheme: studyState.cbtTheme || studyState.theme || 'light',
+      onChangeCbtTheme: (nextPortalTheme) => {
+        studyState.cbtTheme = nextPortalTheme;
+        saveStudyState(studyState);
+      },
+      onOpenSettings: openSettingsModal,
+      onToast: showToast,
+      onPortalActiveChange: (active) => {
+        isNtaPortalActive = Boolean(active);
+      }
+    });
   } else if (activeTab === 'studio') {
     renderCustomStudioView(root, {
       subjects: getAllSubjects(),
@@ -654,7 +670,7 @@ function renderActiveTab() {
 }
 
 function switchTab(tabId, updateHash = true) {
-  const validTabs = ['explorer', 'trends', 'converter', 'drills', 'quiz', 'studio'];
+  const validTabs = ['explorer', 'trends', 'converter', 'drills', 'quiz', 'cbt', 'studio'];
   const nextTab = validTabs.includes(tabId) ? tabId : 'explorer';
   activeTab = nextTab;
   if (updateHash && window.location.hash !== `#${nextTab}`) {
@@ -706,6 +722,7 @@ function initEventListeners() {
 
   // Keyboard shortcuts: '/' for search, 'd' for Dark/Light Mode, 'Escape' for modals
   document.addEventListener('keydown', (e) => {
+    if (isNtaPortalActive) return;
     const inInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
     if (e.key === '/' && !inInput) {
       e.preventDefault();
@@ -840,7 +857,8 @@ function initEventListeners() {
   });
 
   document.getElementById('test-gemini-btn').addEventListener('click', async () => {
-    const apiKey = document.getElementById('gemini-api-key-input').value.trim();
+    const typedKey = document.getElementById('gemini-api-key-input').value.trim();
+    const apiKey = typedKey || getResolvedApiKey();
     const model = document.getElementById('gemini-model-select').value;
     const customModelId = document.getElementById('gemini-custom-model-input').value.trim();
     const resolvedModel = model === 'custom' && customModelId ? customModelId : model;

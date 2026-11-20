@@ -32,12 +32,21 @@ A zero-build, static **GitHub Pages** study platform designed for customizable m
    - **Global Quick Dark Mode**: One-click **🌙 Dark / ☀ Light** toggle in the header (`D` keyboard shortcut on desktop) plus automatic OS dark/light detection on first visit.
    - **Installable Standalone Progressive Web App (PWA)**: Click **Install App** in the top navigation bar to install Super Study directly to your Android, iOS/iPadOS, or Desktop Home Screen / Dock. Launches in a dedicated full-screen window (`display: "standalone"`) without the browser address bar or tabs, backed by an offline-first Service Worker (`sw.js`).
 
+7. **NEET 2027 NTA CBT Test Center (Full-Screen TCS iON Interface, PYQs, Abhyas & PDF Cropper)**
+   - **Authentic NTA / TCS iON Test Portal**: Official General Instructions & Declaration screen, live countdown timer (`HH:MM:SS`), **Physics / Chemistry / Botany / Zoology** (or combined Biology) tabs, `Save & Next`, `Clear`, `Save & Mark for Review`, `Mark for Review & Next`, Question Paper preview, and the **5-state shaped Question Palette** (`Not Visited`, `Not Answered`, `Answered`, `Marked for Review`, and `Answered & Marked for Review` evaluated per NTA rules).
+   - **Portal Dark Mode & Diagram Contrast**: One-click **🌙 Portal Dark Mode / ☀ Classic NTA Light** toggle directly inside the test portal (plus a bright diagram backing toggle for crisp circuit and chemical structure readability).
+   - **Offline PYQs, Official 2024–2026 Exam Papers & NTA Abhyas Bank**: Includes **1,258+ chapter-tagged NEET PYQs (2016–2024)**, **560 official image-based exam questions (NEET 2024 Code T3, 2025 Code 45, 2026 Code 13)**, and a curated **NTA Abhyas & NCERT Trap Bank** across Physics, Chemistry, Botany, and Zoology.
+   - **Custom Part / Full Test Builder**: Mix and match NCERT Class 11 & 12 chapters, blend PYQ + NTA Abhyas + PDF + **`gemini-3.1-flash-lite`** AI-generated questions, and set custom question counts and time limits.
+   - **PDF Question & Diagram Cropper Studio**: Upload any PDF test paper, extract questions & diagram bounding boxes automatically via `pdf.js` + `gemini-3.1-flash-lite` Vision (or offline text extraction), and drag-to-crop diagrams or whole questions directly onto any test card.
+   - **IndexedDB Crash Recovery & Post-Test Analytics**: Auto-saves active exam sessions every few seconds, stores test history & PDF images in `IndexedDB`, and provides subject-wise NTA scorecards, Solution Review with inline **"Ask Gemini Tutor"**, and **1-Click "Re-Test Mistakes"**.
+
 ## Live Website (GitHub Pages)
 
-- **URL**: `https://adityacoder1.github.io/super-study/` (deployed directly from the `main` branch via Repository **Settings → Pages**).
+- **URL**: `https://adityacoder1.github.io/super-study/` (deployed from `main`, or via GitHub Actions `.github/workflows/deploy-pages.yml` when **Settings → Pages → Source** is set to **GitHub Actions** to inject the `GEMINI_API_KEY` secret runtime fallback).
 
 ## Configuring `GEMINI_API_KEY` Safely
 
 - Click **Gemini API** in the top navigation bar.
-- Paste your `GEMINI_API_KEY` from Google AI Studio and pick your Gemini model (`gemini-2.5-flash` default, `gemini-2.5-pro`, `gemini-2.0-flash`, or a custom/experimental model ID).
+- Paste your `GEMINI_API_KEY` from Google AI Studio and pick your Gemini model (`gemini-3.1-flash-lite` default for both Question Generation & Multimodal PDF Vision, `gemini-3.5-flash-lite`, `gemini-3.8-flash`, `gemini-3.1-pro-preview`, or a custom model ID).
 - Your key is stored **only in your browser's `localStorage`** and never committed to GitHub.
+- You can also run the manual **Expand NEET 2027 Question Bank** GitHub Action (`.github/workflows/expand-neet-bank.yml`) using your repository's `GEMINI_API_KEY` secret.

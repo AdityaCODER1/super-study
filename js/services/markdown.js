@@ -333,3 +333,78 @@ export function renderMarkdown(rawText) {
 
   return htmlBlocks.join('');
 }
+
+/**
+ * Renders text containing LaTeX math (\[...\], \(...\), $$...$$, $...$) and lightweight
+ * Markdown (bold/italic/linebreaks). Uses window.katex if loaded, with Unicode math fallback.
+ */
+function fallbackTexToText(tex) {
+  let out = normalizeChemistryLatex(`$${tex}$`);
+  out = out
+    .replace(/\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, '($1)/($2)')
+    .replace(/\\sqrt\s*\{([^{}]*)\}/g, '√($1)')
+    .replace(/\\vec\s*\{([^{}]*)\}/g, '$1⃗')
+    .replace(/\\overrightarrow\s*\{([^{}]*)\}/g, '$1⃗')
+    .replace(/\\theta\b/g, 'θ')
+    .replace(/\\lambda\b/g, 'λ')
+    .replace(/\\varepsilon_?0\b/g, 'ε₀')
+    .replace(/\\varepsilon\b/g, 'ε')
+    .replace(/\\phi\b/g, 'φ')
+    .replace(/\\psi\b/g, 'ψ')
+    .replace(/\\rho\b/g, 'ρ')
+    .replace(/\\tau\b/g, 'τ')
+    .replace(/\\infty\b/g, '∞')
+    .replace(/\\implies\b/g, '⇒')
+    .replace(/\\propto\b/g, '∝')
+    .replace(/\\oint\b/g, '∮')
+    .replace(/\\int\b/g, '∫')
+    .replace(/\\sum\b/g, '∑')
+    .replace(/\\partial\b/g, '∂')
+    .replace(/\\sim\b/g, '~')
+    .replace(/\\,/g, ' ')
+    .replace(/~/g, ' ')
+    .replace(/[{}]/g, '');
+  return escapeHtml(out);
+}
+
+export function renderMathRichText(rawText, { inline = false } = {}) {
+  if (rawText === null || rawText === undefined) return '';
+  const src = String(rawText).replace(/\r\n?/g, '\n');
+  if (!src) return '';
+
+  const mathTokens = [];
+  const katex = typeof window !== 'undefined' ? window.katex : null;
+
+  const pushMath = (tex, displayMode) => {
+    const idx = mathTokens.length;
+    let html;
+    if (katex && typeof katex.renderToString === 'function') {
+      try {
+        html = katex.renderToString(tex.trim(), {
+          displayMode: Boolean(displayMode && !inline),
+          throwOnError: false,
+          strict: false
+        });
+      } catch {
+        html = fallbackTexToText(tex);
+      }
+    } else {
+      html = fallbackTexToText(tex);
+    }
+    mathTokens.push(html);
+    return `\x00MATH_${idx}\x00`;
+  };
+
+  // Extract display & inline math spans before HTML escaping / markdown formatting
+  let tokenized = src
+    .replace(/\$\$([\s\S]+?)\$\$/g, (_, tex) => pushMath(tex, true))
+    .replace(/\\\[([\s\S]+?)\\\]/g, (_, tex) => pushMath(tex, true))
+    .replace(/\\\(([\s\S]+?)\\\)/g, (_, tex) => pushMath(tex, false))
+    .replace(/(^|[^\\])\$([^\s$](?:[^$\n]*?[^\s$])?)\$(?!\d)/g, (_, lead, tex) => `${lead}${pushMath(tex, false)}`);
+
+  let html = formatEscapedInline(escapeHtml(tokenized));
+  if (!inline) {
+    html = html.replace(/\n/g, '<br />');
+  }
+  return html.replace(/\x00MATH_(\d+)\x00/g, (_, idx) => mathTokens[Number(idx)] || '');
+}

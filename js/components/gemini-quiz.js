@@ -7,7 +7,7 @@
 import { OFFLINE_QUESTIONS } from '../data/offline-questions.js';
 import { generateCustomQuestions, callGeminiApi } from '../services/gemini.js';
 import { renderMarkdown, renderInlineMarkdown } from '../services/markdown.js';
-import { loadGeminiConfig, getResolvedModelId } from '../services/storage.js';
+import { loadGeminiConfig, getResolvedModelId, getResolvedApiKey } from '../services/storage.js';
 
 function escapeHtml(str) {
   return String(str ?? '')
@@ -21,7 +21,7 @@ export function renderGeminiQuizView(
   { subject, reactions, mastery, quizStats, onRecordAnswer, onOpenSettings }
 ) {
   const cfg = loadGeminiConfig();
-  let sourceMode = cfg.apiKey ? 'gemini' : 'offline';
+  let sourceMode = getResolvedApiKey(cfg) ? 'gemini' : 'offline';
   let selectedChapter = 'all';
   let questionType = 'Mixed NEET Pattern';
   let difficulty = 'NEET Tricky Exception';
@@ -54,7 +54,7 @@ export function renderGeminiQuizView(
 
   function render() {
     const liveCfg = loadGeminiConfig();
-    const hasKey = Boolean(liveCfg.apiKey);
+    const hasKey = Boolean(getResolvedApiKey(liveCfg));
     const modelId = getResolvedModelId(liveCfg);
 
     const chapters = subject.chapters || [];
@@ -276,7 +276,7 @@ export function renderGeminiQuizView(
         return;
       }
 
-      if (!loadGeminiConfig().apiKey) {
+      if (!getResolvedApiKey()) {
         errorMsg = 'Please configure your GEMINI_API_KEY first (or switch to Built-in Offline NEET Bank).';
         render();
         return;

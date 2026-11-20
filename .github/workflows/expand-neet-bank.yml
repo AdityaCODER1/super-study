@@ -1,0 +1,141 @@
+name: Expand NEET 2027 Question Bank with Gemini 3.1 Flash-Lite
+
+on:
+  workflow_dispatch:
+    inputs:
+      subject:
+        description: 'NEET Subject'
+        required: true
+        default: 'physics'
+        type: choice
+        options:
+          - physics
+          - chemistry
+          - botany
+          - zoology
+      topic:
+        description: 'Chapter / Topic Focus (e.g. Electrostatics, Chemical Kinetics, Genetics)'
+        required: true
+        default: 'High-Yield NCERT NEET 2027 Mix'
+        type: string
+      style:
+        description: 'Question Style'
+        required: true
+        default: 'abhyas'
+        type: choice
+        options:
+          - abhyas
+          - pyq
+          - new-pattern
+      count:
+        description: 'Number of questions to generate (5-20)'
+        required: true
+        default: '10'
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  generate-questions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Generate NEET questions via Gemini 3.1 Flash-Lite & append to abhyas-bank.js
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          INPUT_SUBJECT: ${{ github.event.inputs.subject }}
+          INPUT_TOPIC: ${{ github.event.inputs.topic }}
+          INPUT_STYLE: ${{ github.event.inputs.style }}
+          INPUT_COUNT: ${{ github.event.inputs.count }}
+        run: |
+          node - <<'EOF'
+          const fs = require('fs');
+          const apiKey = (process.env.GEMINI_API_KEY || '').trim();
+          if (!apiKey) {
+            throw new Error('GEMINI_API_KEY repository secret is required.');
+          }
+          const subject = process.env.INPUT_SUBJECT || 'physics';
+          const topic = process.env.INPUT_TOPIC || 'NCERT High-Yield';
+          const style = process.env.INPUT_STYLE || 'abhyas';
+          const count = Math.max(1, Math.min(20, Number(process.env.INPUT_COUNT) || 10));
+
+          const prompt = `Create ${count} single-correct NEET (UG) 2027 MCQs for ${subject.toUpperCase()} on: ${topic}.
+          Style: ${style === 'abhyas' ? 'NTA Abhyas NCERT line-by-line & numericals' : style === 'new-pattern' ? 'Assertion-Reason / Statement I & II / Match List' : 'NEET PYQ style'}.
+          Use LaTeX inside \\( ... \\) for equations/formulas.
+          Return ONLY JSON: {"questions":[{"question":"...","options":["...","...","...","..."],"correctIndex":0,"explanation":"..."}]}`;
+
+          (async () => {
+            const models = ['gemini-3.1-flash-lite', 'gemini-3.1-flash-lite-preview', 'gemini-3.5-flash-lite'];
+            let data = null;
+            for (const m of models) {
+              const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                  generationConfig: { responseMimeType: 'application/json', maxOutputTokens: 16384 }
+                })
+              });
+              if (resp.ok) {
+                data = await resp.json();
+                break;
+              }
+            }
+            if (!data) throw new Error('Gemini API call failed for all fallback models.');
+            const raw = data.candidates[0].content.parts.filter((p) => !p.thought).map((p) => p.text || '').join('').trim();
+            const parsed = JSON.parse(raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, ''));
+            const list = Array.isArray(parsed) ? parsed : parsed.questions;
+            if (!Array.isArray(list) || list.length === 0) throw new Error('No questions returned.');
+
+            const ts = Date.now().toString(36);
+            const items = list.map((q, idx) => ({
+              id: `abh-ci-${subject.slice(0,3)}-${ts}-${idx}`,
+              subject,
+              chapterId: null,
+              classLevel: null,
+              source: 'ABHYAS',
+              examTag: `NTA Abhyas · ${subject[0].toUpperCase() + subject.slice(1)} (${topic})`,
+              year: null,
+              qNo: null,
+              section: null,
+              question: String(q.question || ''),
+              questionImage: null,
+              imageOnly: false,
+              options: (q.options || []).slice(0, 4).map(String),
+              correctIndex: Number.isInteger(q.correctIndex) && q.correctIndex >= 0 && q.correctIndex < 4 ? q.correctIndex : 0,
+              explanation: String(q.explanation || '')
+            }));
+
+            const bankPath = 'js/data/abhyas-bank.js';
+            let content = fs.readFileSync(bankPath, 'utf8');
+            const marker = 'export const ABHYAS_BANK =';
+            const pos = content.indexOf(marker);
+            if (pos === -1) throw new Error('Could not find ABHYAS_BANK export');
+            const appendVar = `\nconst CI_ADDED_${ts} = ${JSON.stringify(items, null, 2)};\n`;
+            const exportRe = /export const ABHYAS_BANK = \[([^\]]+)\];/;
+            const match = content.match(exportRe);
+            if (!match) throw new Error('Could not match ABHYAS_BANK array');
+            content = content.slice(0, pos) + appendVar + content.slice(pos).replace(
+              exportRe,
+              `export const ABHYAS_BANK = [${match[1]}, ...CI_ADDED_${ts}];`
+            );
+            fs.writeFileSync(bankPath, content);
+            console.log(`Added ${items.length} questions to ${bankPath}`);
+          })().catch((err) => { console.error(err); process.exit(1); });
+          EOF
+
+      - name: Commit updated question bank
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add js/data/abhyas-bank.js
+          git diff --cached --quiet || git commit -m "chore: add AI-generated NEET ${{ inputs.subject }} questions via gemini-3.1-flash-lite"
+          git push

@@ -32,6 +32,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script src="./js/runtime-config.js"></script>
   <link rel="stylesheet" href="./css/styles.css" />
 </head>
 <body>
@@ -121,6 +124,9 @@
           <button type="button" class="nav-tab" data-tab="quiz" id="tab-quiz">
             Gemini AI Question Lab
           </button>
+          <button type="button" class="nav-tab" data-tab="cbt" id="tab-cbt">
+            NEET 2027 NTA CBT
+          </button>
           <button type="button" class="nav-tab" data-tab="studio" id="tab-studio">
             Custom Subjects &amp; Mastery
           </button>
@@ -133,6 +139,9 @@
       <!-- Populated dynamically by js/app.js -->
     </main>
   </div>
+
+  <!-- Full-Screen NTA / TCS iON CBT Exam Portal Mount -->
+  <div id="nta-cbt-fullscreen-root" hidden></div>
 
   <!-- Interactive SVG Mechanism Player Modal -->
   <div class="modal-backdrop" id="mechanism-modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="mech-modal-title">
@@ -185,10 +194,12 @@
           <div class="form-field">
             <label for="gemini-model-select">Gemini Model</label>
             <select id="gemini-model-select">
-              <option value="gemini-2.5-flash">gemini-2.5-flash (Recommended — Fast &amp; Accurate)</option>
-              <option value="gemini-2.5-pro">gemini-2.5-pro (Deep Multi-Step Mechanisms)</option>
-              <option value="gemini-2.0-flash">gemini-2.0-flash</option>
-              <option value="custom">Custom / Experimental Model ID (e.g. hydrogen / preview)</option>
+              <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite (Default — Multimodal Vision &amp; Question Gen)</option>
+              <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Next-Gen Flash-Lite)</option>
+              <option value="gemini-3.8-flash">gemini-3.8-flash (Deep Multi-Step &amp; Vision Reasoning)</option>
+              <option value="gemini-3.1-pro-preview">gemini-3.1-pro-preview (Advanced Pro Reasoning)</option>
+              <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite (Legacy 2.5 Lite)</option>
+              <option value="custom">Custom / Experimental Model ID</option>
             </select>
           </div>
 

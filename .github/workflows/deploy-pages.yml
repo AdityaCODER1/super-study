@@ -1,0 +1,91 @@
+name: Deploy Super Study to GitHub Pages (with GEMINI_API_KEY Runtime Config)
+
+on:
+  push:
+    branches: ['main']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+
+jobs:
+  check-pages-mode:
+    runs-on: ubuntu-latest
+    outputs:
+      build_type: ${{ steps.mode.outputs.build_type }}
+    steps:
+      - name: Check GitHub Pages source mode
+        id: mode
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BT=$(gh api "repos/${{ github.repository }}/pages" --jq '.build_type' 2>/dev/null || echo "legacy")
+          echo "build_type=$BT" >> "$GITHUB_OUTPUT"
+          if [ "$BT" != "workflow" ]; then
+            echo "Note: Pages is currently using '$BT' mode (deploying straight from main branch)."
+            echo "Switch Settings -> Pages -> Build and deployment Source to 'GitHub Actions' to enable runtime GEMINI_API_KEY bundle injection."
+          fi
+
+  build:
+    needs: check-pages-mode
+    if: needs.check-pages-mode.outputs.build_type == 'workflow'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Stage static site artifact
+        run: |
+          mkdir -p _site
+          cp -r index.html manifest.webmanifest sw.js README.md css js icons _site/
+
+      - name: Inject encoded runtime GEMINI_API_KEY fallback (never committed to git)
+        env:
+          SECRET_GEMINI_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          node - <<'EOF'
+          const fs = require('fs');
+          const crypto = require('crypto');
+          const key = (process.env.SECRET_GEMINI_KEY || '').trim();
+          if (!key) {
+            console.log('No GEMINI_API_KEY secret set; keeping null runtime config.');
+            process.exit(0);
+          }
+          const mask = crypto.randomBytes(16).toString('hex');
+          const out = Buffer.alloc(key.length);
+          for (let i = 0; i < key.length; i++) {
+            out[i] = key.charCodeAt(i) ^ mask.charCodeAt(i % mask.length);
+          }
+          const payload = { k: mask, d: out.toString('base64') };
+          fs.writeFileSync(
+            '_site/js/runtime-config.js',
+            `window.__SUPER_STUDY_RUNTIME_KEY__ = ${JSON.stringify(payload)};\n`
+          );
+          console.log('Injected encoded runtime config into _site/js/runtime-config.js');
+          EOF
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: [check-pages-mode, build]
+    if: needs.check-pages-mode.outputs.build_type == 'workflow'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
