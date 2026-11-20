@@ -28,9 +28,14 @@ import { renderDrillView } from './components/drill-view.js';
 import { renderGeminiQuizView } from './components/gemini-quiz.js';
 import { renderCustomStudioView } from './components/custom-studio.js';
 import { renderNtaCbtView } from './components/nta-cbt-view.js';
+import { renderBiologyReaderView } from './components/biology-reader-view.js';
+import { renderBiologySetupsView, stopBiologySetupAutoPlay } from './components/biology-setups-view.js';
+import { renderBiologyRevisionView } from './components/biology-revision-view.js';
+import { renderBiologyDoubtQaView } from './components/biology-doubt-qa-view.js';
 
 let studyState = loadStudyState();
-let activeTab = 'explorer'; // 'explorer' | 'trends' | 'converter' | 'drills' | 'quiz' | 'cbt' | 'studio'
+let activeTab = 'explorer'; // Chem: 'explorer' | 'trends' | 'converter' | 'drills' | 'quiz' | 'cbt' | 'studio'
+                            // Bio: 'bio-reader' | 'bio-setups' | 'bio-revision' | 'bio-doubts-qa' | 'cbt' | 'studio'
 let maskMode = 'none'; // 'none' | 'product' | 'reagent'
 let searchQuery = '';
 let isNtaPortalActive = false;
@@ -40,6 +45,13 @@ let explorerGroupMode = 'chapters'; // 'chapters' | 'mechanisms' | 'named' | 'bo
 let selectedChapterFilter = 'all';
 let selectedMechFilter = 'All Categories';
 let selectedClassFilter = 'all'; // 'all' | '11' | '12'
+
+// Biology workspace deep-link state
+let bioActiveChapterId = 'bot-respiration';
+let bioActiveSetupId = 'setup-respiration';
+let bioActiveSetupStage = '';
+let bioDoubtAnchoredLine = null;
+let bioDoubtAnchoredSetupText = '';
 
 // PWA Install state
 let deferredInstallPrompt = null;
@@ -567,12 +579,99 @@ function renderExplorerView(container, subject, reactions) {
   }
 }
 
+const CHEM_NAV_TABS = [
+  { id: 'explorer', label: 'Reaction & Mechanism Explorer' },
+  { id: 'trends', label: 'Trends, Leaving Groups & Reagents' },
+  { id: 'converter', label: 'Interconversion Finder (X → Y)' },
+  { id: 'drills', label: 'Active-Recall Drills' },
+  { id: 'quiz', label: 'Gemini AI Question Lab' },
+  { id: 'cbt', label: 'NEET 2027 NTA CBT' },
+  { id: 'studio', label: 'Custom Subjects & Mastery' }
+];
+
+const BIO_NAV_TABS = [
+  { id: 'bio-reader', label: '📖 NCERT Reader & Between-the-Lines' },
+  { id: 'bio-setups', label: '🧬 Interactive Concept Setups' },
+  { id: 'bio-revision', label: '⚡ Active Revision & Cloze' },
+  { id: 'bio-doubts-qa', label: '💬 Doubt Notebook & NCERT Q&A' },
+  { id: 'cbt', label: 'NEET 2027 NTA CBT' },
+  { id: 'studio', label: 'Custom Subjects & Mastery' }
+];
+
+function isBiologyActive() {
+  const subj = getActiveSubject();
+  return Boolean(subj?.isCoreBiology || subj?.id === 'biology');
+}
+
+function syncSubjectWorkspaceChrome() {
+  const isBio = isBiologyActive();
+  const navInner = document.getElementById('primary-nav-inner');
+  const tabs = isBio ? BIO_NAV_TABS : CHEM_NAV_TABS;
+  const validIds = tabs.map((t) => t.id);
+
+  if (!validIds.includes(activeTab)) {
+    activeTab = isBio ? 'bio-reader' : 'explorer';
+  }
+
+  if (navInner) {
+    navInner.innerHTML = tabs
+      .map(
+        (t) =>
+          `<button type="button" class="nav-tab ${t.id === activeTab ? 'active' : ''}" data-tab="${escapeHtml(t.id)}" id="tab-${escapeHtml(t.id)}">${escapeHtml(t.label)}</button>`
+      )
+      .join('');
+
+    navInner.querySelectorAll('.nav-tab').forEach((btn) => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+  }
+
+  const quickBioBtn = document.getElementById('quick-biology-btn');
+  if (quickBioBtn) {
+    quickBioBtn.classList.toggle('active-bio-pill', isBio);
+    quickBioBtn.innerHTML = isBio
+      ? '<span aria-hidden="true">🧪</span><span>Back to Organic</span>'
+      : '<span aria-hidden="true">🧬</span><span>Biology NCERT</span>';
+    quickBioBtn.title = isBio
+      ? 'Switch back to Organic Chemistry workspace'
+      : 'Switch to Biology NCERT Mastery Lab (Reader, Concept Setups, Revision & Doubt Hub)';
+  }
+
+  const searchInput = document.getElementById('global-search-input');
+  if (searchInput) {
+    searchInput.placeholder = isBio
+      ? 'Search NCERT Biology lines, traps, enzymes (e.g. RuBisCO, Krebs, F0-F1, RQ)...'
+      : 'Search reactions, reagents (e.g. PCC, O3, Lindlar), or exceptions...';
+  }
+
+  const maskProductBtn = document.getElementById('mask-product-btn');
+  const maskReagentBtn = document.getElementById('mask-reagent-btn');
+  if (maskProductBtn && maskReagentBtn) {
+    if (isBio) {
+      maskProductBtn.textContent = 'Mask Key Terms';
+      maskProductBtn.title = 'Mask key NCERT terms & numbers in sentences for active recall';
+      maskReagentBtn.textContent = 'Hide Subtext';
+      maskReagentBtn.title = 'Mask Between-the-Lines insights to test yourself';
+    } else {
+      maskProductBtn.textContent = 'Hide Product';
+      maskProductBtn.title = 'Hide products for active recall';
+      maskReagentBtn.textContent = 'Hide Reagent';
+      maskReagentBtn.title = 'Hide reagents for active recall';
+    }
+  }
+}
+
 function renderActiveTab() {
   const root = document.getElementById('workspace-root');
   if (!root) return;
 
+  syncSubjectWorkspaceChrome();
   const subject = getActiveSubject();
   const reactions = getReactionsForSubject(subject);
+
+  if (activeTab !== 'bio-setups') {
+    stopBiologySetupAutoPlay();
+  }
 
   const inspectRxn = (rxn) =>
     openMechanismPlayer({
@@ -581,7 +680,142 @@ function renderActiveTab() {
       onToggleBookmark: toggleBookmark
     });
 
-  if (activeTab === 'explorer') {
+  if (activeTab === 'bio-reader') {
+    renderBiologyReaderView(root, {
+      activeChapterId: bioActiveChapterId,
+      maskMode,
+      searchQuery,
+      bioLineMastery: studyState.bioLineMastery || {},
+      bioCustomModules: studyState.bioCustomModules || {},
+      bookmarks: studyState.bookmarks || [],
+      onSelectChapter: (chapId) => {
+        bioActiveChapterId = chapId;
+        renderActiveTab();
+      },
+      onUpdateLineMastery: (lineId, status) => {
+        studyState.bioLineMastery[lineId] = status;
+        saveStudyState(studyState);
+        showToast(`Marked NCERT line as ${status}`);
+        renderActiveTab();
+      },
+      onToggleBookmark: (lineId) => {
+        toggleBookmark(lineId);
+      },
+      onSaveCustomLines: (chapId, lines) => {
+        if (!studyState.bioCustomModules[chapId]) studyState.bioCustomModules[chapId] = [];
+        studyState.bioCustomModules[chapId].push(...lines);
+        saveStudyState(studyState);
+        renderActiveTab();
+      },
+      onDeleteCustomLine: (chapId, lineId) => {
+        if (Array.isArray(studyState.bioCustomModules[chapId])) {
+          studyState.bioCustomModules[chapId] = studyState.bioCustomModules[chapId].filter((l) => l.id !== lineId);
+          saveStudyState(studyState);
+          showToast('Deleted custom NCERT line');
+          renderActiveTab();
+        }
+      },
+      onOpenSetup: (setupId, stageId) => {
+        bioActiveSetupId = setupId || 'setup-respiration';
+        bioActiveSetupStage = stageId || '';
+        switchTab('bio-setups');
+      },
+      onAskDoubtOnLine: (chapId, line) => {
+        bioActiveChapterId = chapId;
+        bioDoubtAnchoredLine = line;
+        bioDoubtAnchoredSetupText = '';
+        switchTab('bio-doubts-qa');
+      },
+      onOpenSettings: openSettingsModal,
+      onToast: showToast
+    });
+  } else if (activeTab === 'bio-setups') {
+    renderBiologySetupsView(root, {
+      initialSetupId: bioActiveSetupId,
+      initialStageId: bioActiveSetupStage,
+      bioSetupProgress: studyState.bioSetupProgress || {},
+      onCompleteCheckpoint: (setupId, checkpointKey) => {
+        if (!studyState.bioSetupProgress[setupId]) {
+          studyState.bioSetupProgress[setupId] = { completedCheckpoints: [], notes: '' };
+        }
+        const arr = studyState.bioSetupProgress[setupId].completedCheckpoints;
+        if (!arr.includes(checkpointKey)) {
+          arr.push(checkpointKey);
+          saveStudyState(studyState);
+        }
+      },
+      onJumpToReader: (chapId) => {
+        bioActiveChapterId = chapId;
+        switchTab('bio-reader');
+      },
+      onAskDoubtOnSetup: (chapId, setupText) => {
+        bioActiveChapterId = chapId;
+        bioDoubtAnchoredLine = null;
+        bioDoubtAnchoredSetupText = setupText;
+        switchTab('bio-doubts-qa');
+      },
+      onToast: showToast
+    });
+  } else if (activeTab === 'bio-revision') {
+    renderBiologyRevisionView(root, {
+      initialChapterId: bioActiveChapterId || 'all',
+      bioLineMastery: studyState.bioLineMastery || {},
+      bioCustomModules: studyState.bioCustomModules || {},
+      onUpdateLineMastery: (lineId, status) => {
+        studyState.bioLineMastery[lineId] = status;
+        saveStudyState(studyState);
+      },
+      onJumpToReader: (chapId) => {
+        bioActiveChapterId = chapId;
+        switchTab('bio-reader');
+      },
+      onToast: showToast
+    });
+  } else if (activeTab === 'bio-doubts-qa') {
+    renderBiologyDoubtQaView(root, {
+      initialChapterId: bioActiveChapterId,
+      anchoredLine: bioDoubtAnchoredLine,
+      anchoredSetupText: bioDoubtAnchoredSetupText,
+      bioCustomModules: studyState.bioCustomModules || {},
+      bioDoubtNotebook: studyState.bioDoubtNotebook || [],
+      quizStats: studyState.quizStats,
+      onClearAnchor: () => {
+        bioDoubtAnchoredLine = null;
+        bioDoubtAnchoredSetupText = '';
+        renderActiveTab();
+      },
+      onSaveDoubt: (entry) => {
+        studyState.bioDoubtNotebook.unshift(entry);
+        saveStudyState(studyState);
+      },
+      onTogglePinDoubt: (doubtId) => {
+        const target = studyState.bioDoubtNotebook.find((d) => d.id === doubtId);
+        if (target) {
+          target.pinned = !target.pinned;
+          saveStudyState(studyState);
+          renderActiveTab();
+        }
+      },
+      onDeleteDoubt: (doubtId) => {
+        studyState.bioDoubtNotebook = studyState.bioDoubtNotebook.filter((d) => d.id !== doubtId);
+        saveStudyState(studyState);
+        showToast('Removed from Doubt Notebook');
+        renderActiveTab();
+      },
+      onRecordAnswer: (isCorrect) => {
+        studyState.quizStats.attempted += 1;
+        if (isCorrect) {
+          studyState.quizStats.correct += 1;
+          studyState.quizStats.streak += 1;
+        } else {
+          studyState.quizStats.streak = 0;
+        }
+        saveStudyState(studyState);
+      },
+      onOpenSettings: openSettingsModal,
+      onToast: showToast
+    });
+  } else if (activeTab === 'explorer') {
     renderExplorerView(root, subject, reactions);
   } else if (activeTab === 'trends') {
     renderTrendsView(root);
@@ -660,6 +894,7 @@ function renderActiveTab() {
       onSwitchSubject: (subjId) => {
         studyState.activeSubjectId = subjId;
         selectedChapterFilter = 'all';
+        activeTab = subjId === 'biology' ? 'bio-reader' : 'explorer';
         saveStudyState(studyState);
         populateSubjectSwitcher();
         renderActiveTab();
@@ -670,24 +905,25 @@ function renderActiveTab() {
 }
 
 function switchTab(tabId, updateHash = true) {
-  const validTabs = ['explorer', 'trends', 'converter', 'drills', 'quiz', 'cbt', 'studio'];
-  const nextTab = validTabs.includes(tabId) ? tabId : 'explorer';
+  if (tabId && tabId.startsWith('bio-') && !isBiologyActive()) {
+    studyState.activeSubjectId = 'biology';
+    saveStudyState(studyState);
+    populateSubjectSwitcher();
+  }
+  const isBio = isBiologyActive();
+  const validTabs = isBio
+    ? ['bio-reader', 'bio-setups', 'bio-revision', 'bio-doubts-qa', 'cbt', 'studio']
+    : ['explorer', 'trends', 'converter', 'drills', 'quiz', 'cbt', 'studio'];
+  const fallbackTab = isBio ? 'bio-reader' : 'explorer';
+  const nextTab = validTabs.includes(tabId) ? tabId : fallbackTab;
   activeTab = nextTab;
   if (updateHash && window.location.hash !== `#${nextTab}`) {
     history.replaceState(null, '', `#${nextTab}${window.location.search}`);
   }
-  document.querySelectorAll('.nav-tab').forEach((btn) => {
-    btn.classList.toggle('active', btn.dataset.tab === nextTab);
-  });
   renderActiveTab();
 }
 
 function initEventListeners() {
-  // Primary tabs
-  document.querySelectorAll('.nav-tab').forEach((btn) => {
-    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
-  });
-
   window.addEventListener('hashchange', () => {
     const hashTab = window.location.hash.replace('#', '');
     if (hashTab) switchTab(hashTab, false);
@@ -695,8 +931,26 @@ function initEventListeners() {
 
   document.getElementById('brand-home-link').addEventListener('click', (e) => {
     e.preventDefault();
-    switchTab('explorer');
+    switchTab(isBiologyActive() ? 'bio-reader' : 'explorer');
   });
+
+  // Quick Biology NCERT Lab button
+  const quickBioBtn = document.getElementById('quick-biology-btn');
+  if (quickBioBtn) {
+    quickBioBtn.addEventListener('click', () => {
+      const nextSubj = isBiologyActive() ? 'organic-chemistry' : 'biology';
+      studyState.activeSubjectId = nextSubj;
+      selectedChapterFilter = 'all';
+      saveStudyState(studyState);
+      populateSubjectSwitcher();
+      switchTab(nextSubj === 'biology' ? 'bio-reader' : 'explorer');
+      showToast(
+        nextSubj === 'biology'
+          ? 'Switched to Biology NCERT Mastery Lab'
+          : 'Switched to Organic Chemistry Lab'
+      );
+    });
+  }
 
   // Subject switcher
   document.getElementById('subject-switcher').addEventListener('change', (e) => {
@@ -709,14 +963,15 @@ function initEventListeners() {
     studyState.activeSubjectId = val;
     selectedChapterFilter = 'all';
     saveStudyState(studyState);
-    renderActiveTab();
+    switchTab(val === 'biology' ? 'bio-reader' : 'explorer');
   });
 
   // Global search
   const searchInput = document.getElementById('global-search-input');
   searchInput.addEventListener('input', (e) => {
     searchQuery = e.target.value;
-    if (activeTab !== 'explorer') switchTab('explorer');
+    const targetHome = isBiologyActive() ? 'bio-reader' : 'explorer';
+    if (activeTab !== targetHome) switchTab(targetHome);
     else renderActiveTab();
   });
 
@@ -732,6 +987,7 @@ function initEventListeners() {
       toggleTheme();
     } else if (e.key === 'Escape') {
       stopMechanismAutoPlay();
+      stopBiologySetupAutoPlay();
       document.getElementById('mechanism-modal-backdrop').hidden = true;
       document.getElementById('settings-modal-backdrop').hidden = true;
       const installBackdrop = document.getElementById('install-modal-backdrop');
@@ -796,7 +1052,8 @@ function initEventListeners() {
     btn.addEventListener('click', () => {
       maskMode = btn.dataset.mask;
       document.querySelectorAll('.mask-btn').forEach((b) => b.classList.toggle('active', b === btn));
-      if (activeTab !== 'explorer') switchTab('explorer');
+      const targetHome = isBiologyActive() ? 'bio-reader' : 'explorer';
+      if (activeTab !== targetHome) switchTab(targetHome);
       else renderActiveTab();
     });
   });
@@ -931,6 +1188,7 @@ function bootstrap() {
   if (initialTab) {
     switchTab(initialTab, false);
   } else {
+    activeTab = isBiologyActive() ? 'bio-reader' : 'explorer';
     renderActiveTab();
   }
 

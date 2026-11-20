@@ -422,3 +422,206 @@ ${userQuestion ? `Student's doubt: ${userQuestion}` : 'Explain the solution.'}
 Answer in 120-220 words.`;
   return callGeminiApi({ prompt, systemInstruction, jsonMode: false, maxOutputTokens: 4096 });
 }
+
+/* ==========================================================================
+   Biology NCERT Deep-Understanding Suite — Line Decoder, Doubt Solver & BTL Q-Gen
+   ========================================================================== */
+
+/**
+ * Decodes an NCERT Biology passage (or extracted PDF text) into line-by-line
+ * "Between-the-Lines" deep-understanding cards + cloze blanks + word-swap traps.
+ */
+export async function decodeNcertPassageBetweenTheLines({
+  chapterId,
+  chapterLabel,
+  sectionTitle = 'Imported NCERT Section',
+  rawText
+}) {
+  const systemInstruction = `You are a master NEET-UG Biology NCERT educator who specializes in reading "between the lines" of Class 11 & 12 NCERT Biology textbooks.
+Every deduction, mechanism, trap, and number MUST be strictly grounded in official NCERT Biology Class 11 & 12 facts without inventing outside-syllabus claims.
+Return ONLY valid JSON matching the exact schema.`;
+
+  const prompt = `Break down the following NCERT Biology passage from "${chapterLabel}" (Section: "${sectionTitle}") into 3 to 8 high-yield line-by-line study entries.
+
+Passage / Topic to decode:
+"""
+${String(rawText || '').slice(0, 12000)}
+"""
+
+Rules:
+- Each item represents a crucial NCERT sentence or tightly linked 2-sentence idea.
+- "ncertText": Exact or faithful NCERT sentence(s).
+- "clozeText": Same sentence with 2 to 4 key NCERT terms, enzymes, numbers, organisms, or locations wrapped in {{double braces}} for active recall (e.g. "Pyruvate dehydrogenase requires {{Mg2+}} and {{coenzyme A}}").
+- "betweenTheLines":
+  - "inference": What NCERT implies without stating explicitly ("between the lines" conceptual leap).
+  - "mechanism": Underlying biochemical / physiological / genetic logic (the WHY & HOW).
+  - "neetTrap": Exact word-swaps or Assertion-Reason twists NTA creates from this line (e.g. "only", "matrix vs inner membrane", "all vs most").
+  - "quantitative": Relevant stoichiometry, ATP/NADH, ploidy (2n/4C), pH, pressure, or numeric benchmark (or "Qualitative concept — no fixed numerical value" if non-numeric).
+- "wordSwapTrap": Optional single tricky statement testing this line:
+  { "statement": "...", "isExactNcert": false, "swappedWord": "...", "correctWord": "...", "explanation": "..." }
+
+Return JSON:
+{
+  "lines": [
+    {
+      "sectionTitle": "${sectionTitle}",
+      "ncertRef": "${chapterLabel} · ${sectionTitle}",
+      "ncertText": "...",
+      "clozeText": "...",
+      "betweenTheLines": {
+        "inference": "...",
+        "mechanism": "...",
+        "neetTrap": "...",
+        "quantitative": "..."
+      },
+      "wordSwapTrap": {
+        "statement": "...",
+        "isExactNcert": false,
+        "swappedWord": "...",
+        "correctWord": "...",
+        "explanation": "..."
+      }
+    }
+  ]
+}`;
+
+  const raw = await callGeminiApi({ prompt, systemInstruction, jsonMode: true, maxOutputTokens: 16384 });
+  const parsed = parseJsonResponse(raw);
+  const list = Array.isArray(parsed) ? parsed : parsed?.lines;
+  if (!Array.isArray(list) || list.length === 0) {
+    throw new Error('Gemini did not return structured NCERT lines.');
+  }
+
+  const stamp = Date.now().toString(36);
+  return list.map((item, idx) => ({
+    id: `bio-custom-${chapterId}-${stamp}-${idx}`,
+    chapterId,
+    sectionTitle: String(item.sectionTitle || sectionTitle),
+    ncertRef: String(item.ncertRef || `${chapterLabel} · Custom`),
+    ncertText: String(item.ncertText || ''),
+    clozeText: String(item.clozeText || item.ncertText || ''),
+    betweenTheLines: {
+      inference: String(item.betweenTheLines?.inference || ''),
+      mechanism: String(item.betweenTheLines?.mechanism || ''),
+      neetTrap: String(item.betweenTheLines?.neetTrap || ''),
+      quantitative: String(item.betweenTheLines?.quantitative || '')
+    },
+    wordSwapTrap: item.wordSwapTrap && item.wordSwapTrap.statement ? {
+      id: `ws-custom-${stamp}-${idx}`,
+      chapterId,
+      statement: String(item.wordSwapTrap.statement),
+      isExactNcert: Boolean(item.wordSwapTrap.isExactNcert),
+      swappedWord: String(item.wordSwapTrap.swappedWord || ''),
+      correctWord: String(item.wordSwapTrap.correctWord || ''),
+      explanation: String(item.wordSwapTrap.explanation || '')
+    } : null,
+    isCustomImported: true
+  }));
+}
+
+/**
+ * Answers a Biology student's doubt strictly anchored to NCERT Class 11/12 lines,
+ * highlighting "between-the-lines" reasoning and NEET exam traps.
+ */
+export async function askBiologyNcertDoubt({
+  chapterLabel = 'NCERT Biology',
+  ncertLineContext = '',
+  setupContext = '',
+  userDoubt,
+  history = []
+}) {
+  const systemInstruction = `You are a crystal-clear NEET-UG Biology NCERT mentor.
+Your #1 rule is to ground every answer in official NCERT Class 11 & 12 Biology textbook phrasing first, then unpack the "between-the-lines" conceptual logic (why it happens), and finally warn about NTA/NEET word-swap or Assertion-Reason traps.
+Structure responses cleanly with short headings/bullets:
+- **NCERT Anchor**: Quote or cite the exact NCERT rule/line.
+- **Between the Lines (Why & How)**: Deep conceptual explanation.
+- **NEET Exam Trap**: What students commonly confuse or what NTA swaps.`;
+
+  const historyText = history.length
+    ? `Previous Q&A in this session:\n${history
+        .slice(-4)
+        .map((h) => `Student: ${h.question}\nTutor: ${h.answer}`)
+        .join('\n---\n')}\n\n`
+    : '';
+
+  const contextLines = [
+    `Chapter Scope: ${chapterLabel}`,
+    ncertLineContext ? `Anchored NCERT Line / Context:\n${ncertLineContext}` : '',
+    setupContext ? `Interactive Concept Setup Context:\n${setupContext}` : ''
+  ]
+    .filter(Boolean)
+    .join('\n\n');
+
+  const prompt = `${contextLines}
+
+${historyText}Student's Doubt: ${userDoubt}
+
+Answer clearly and concisely (around 140-260 words).`;
+
+  return callGeminiApi({ prompt, systemInstruction, jsonMode: false, maxOutputTokens: 4096 });
+}
+
+/**
+ * Generates NEET-UG Biology questions specifically designed to test "Between-the-Lines"
+ * NCERT understanding, Assertion-Reason, Statement I & II, or experimental perturbations.
+ */
+export async function generateBiologyBetweenTheLinesQuestions({
+  chapterId,
+  chapterLabel,
+  ncertPassageContext = '',
+  questionType = 'Mixed NCERT Traps',
+  difficulty = 'Between-the-Lines Deep',
+  count = 5
+}) {
+  const systemInstruction = `You are a senior NTA NEET-UG Biology paper setter creating high-precision questions strictly based on NCERT Class 11 & 12 Biology.
+Focus on "between-the-lines" conceptual deductions, Assertion-Reason, Statement I & II, and pathway perturbations — NEVER pure trivia outside NCERT.
+Return ONLY valid JSON.`;
+
+  const contextBlock = ncertPassageContext
+    ? `Anchor the questions in these NCERT concepts/lines:\n${ncertPassageContext.slice(0, 6000)}`
+    : `Chapter: ${chapterLabel}`;
+
+  const prompt = `Generate ${count} Biology questions for "${chapterLabel}" (${questionType}, Difficulty: ${difficulty}).
+${contextBlock}
+
+Guidelines:
+- If "Assertion-Reason": Put **Assertion (A):** and **Reason (R):** cleanly in "question" and use the standard 4 NEET Assertion-Reason options.
+- If "Statement I & II": Put **Statement I:** and **Statement II:** cleanly in "question" and use standard 4 NEET Statement options.
+- If "Pathway / What-If Perturbation": Ask what happens when an enzyme/O2/cofactor/membrane gradient is altered (e.g., 2,4-DNP uncoupler, cyanide, anaerobic shift, high O2 in C3 vs C4).
+- If "How Many Statements": List 4 numbered NCERT statements (I, II, III, IV) with subtle word-swaps and ask how many are correct/incorrect.
+- Include the exact NCERT rationale + "between-the-lines" deduction in "explanation".
+
+Return JSON:
+{
+  "questions": [
+    {
+      "chapterId": "${chapterId}",
+      "type": "${questionType}",
+      "ncertRef": "NCERT Class 11/12 · Section",
+      "question": "...",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correctIndex": 0,
+      "explanation": "..."
+    }
+  ]
+}`;
+
+  const raw = await callGeminiApi({ prompt, systemInstruction, jsonMode: true, maxOutputTokens: 16384 });
+  const parsed = parseJsonResponse(raw);
+  const list = Array.isArray(parsed) ? parsed : parsed?.questions;
+  if (!Array.isArray(list)) {
+    throw new Error('Gemini did not return a Biology questions array.');
+  }
+  return list.map((q, idx) => ({
+    id: `bio-ai-q-${Date.now()}-${idx}`,
+    chapterId: q.chapterId || chapterId,
+    type: String(q.type || questionType),
+    source: 'Gemini Between-the-Lines',
+    ncertRef: String(q.ncertRef || chapterLabel),
+    question: String(q.question || ''),
+    options: Array.isArray(q.options) && q.options.length === 4 ? q.options.map(String) : ['A', 'B', 'C', 'D'],
+    correctIndex: Number.isInteger(q.correctIndex) && q.correctIndex >= 0 && q.correctIndex < 4 ? q.correctIndex : 0,
+    explanation: String(q.explanation || ''),
+    isAiGenerated: true
+  }));
+}

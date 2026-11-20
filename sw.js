@@ -4,7 +4,7 @@
  * for instant standalone Home Screen launch and 100% offline study support.
  */
 
-const CACHE_NAME = 'super-study-pwa-v3';
+const CACHE_NAME = 'super-study-pwa-v4';
 
 const PRECACHE_ASSETS = [
   './',
@@ -13,6 +13,10 @@ const PRECACHE_ASSETS = [
   './css/styles.css',
   './js/app.js',
   './js/runtime-config.js',
+  './js/components/biology-doubt-qa-view.js',
+  './js/components/biology-reader-view.js',
+  './js/components/biology-revision-view.js',
+  './js/components/biology-setups-view.js',
   './js/components/converter-view.js',
   './js/components/custom-studio.js',
   './js/components/drill-view.js',
@@ -22,6 +26,7 @@ const PRECACHE_ASSETS = [
   './js/components/pdf-crop-modal.js',
   './js/components/trends-view.js',
   './js/data/abhyas-bank.js',
+  './js/data/biology-ncert-data.js',
   './js/data/neet-papers.js',
   './js/data/neet-syllabus.js',
   './js/data/offline-questions.js',

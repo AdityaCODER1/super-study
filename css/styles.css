@@ -3310,3 +3310,491 @@ code, .mono {
   background: var(--nta-palette-bg);
   border: 1px solid var(--nta-border);
 }
+
+/* ==========================================================================
+   Biology NCERT Deep-Understanding & Interactive Concept Suite
+   ========================================================================== */
+
+.bio-quick-pill {
+  border-color: var(--chem-lg);
+  color: var(--chem-lg);
+  background: var(--chem-lg-soft);
+}
+
+.bio-quick-pill.active-bio-pill {
+  background: var(--accent-primary-soft);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.bio-reader-sidebar .bio-chapter-list {
+  max-height: 62vh;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.bio-reader-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bio-chapter-banner,
+.bio-importer-card {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bio-lines-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bio-line-card {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.bio-line-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+}
+
+.bio-line-card.is-tricky {
+  border-left: 4px solid var(--chem-danger);
+}
+
+.bio-line-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bio-ncert-quote {
+  margin: 0;
+  padding: 13px 16px;
+  border-left: 4px solid var(--accent-primary);
+  background: var(--bg-code);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.65;
+  color: var(--text-primary);
+}
+
+.bio-cloze-token {
+  display: inline-block;
+  border: 1px dashed var(--accent-primary);
+  background: var(--accent-primary-soft);
+  color: transparent;
+  border-radius: 5px;
+  padding: 1px 8px;
+  margin: 0 2px;
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+  font-weight: 700;
+  transition: all var(--transition-fast);
+}
+
+.bio-cloze-token::after {
+  content: '? ? ?';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--accent-primary);
+  font-size: 0.74rem;
+  font-family: var(--font-mono);
+}
+
+.bio-cloze-token.revealed {
+  color: var(--chem-lg);
+  background: var(--chem-lg-soft);
+  border-style: solid;
+  border-color: var(--chem-lg);
+}
+
+.bio-cloze-token.revealed::after {
+  display: none;
+}
+
+.bio-btl-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.bio-btl-box {
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-subtle);
+  font-size: 0.85rem;
+  line-height: 1.48;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bio-btl-box.btl-inference {
+  border-color: hsla(214, 84%, 46%, 0.28);
+  background: var(--accent-primary-soft);
+}
+
+.bio-btl-box.btl-mechanism {
+  border-color: hsla(154, 62%, 34%, 0.28);
+  background: var(--chem-lg-soft);
+}
+
+.bio-btl-box.btl-trap {
+  border-color: hsla(352, 72%, 48%, 0.28);
+  background: var(--chem-danger-soft);
+}
+
+.bio-btl-box.btl-quant {
+  border-color: hsla(36, 92%, 42%, 0.28);
+  background: var(--chem-warn-soft);
+}
+
+.bio-btl-label {
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+}
+
+.bio-btl-body {
+  color: var(--text-secondary);
+}
+
+/* Interactive Concept Setups */
+.bio-setup-switcher-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(225px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.bio-setup-pill-card {
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.86rem;
+  transition: all var(--transition-fast);
+}
+
+.bio-setup-pill-card:hover {
+  border-color: var(--accent-primary);
+  transform: translateY(-1px);
+}
+
+.bio-setup-pill-card.active {
+  background: var(--accent-primary-soft);
+  border-color: var(--accent-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.bio-setup-pill-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent-primary);
+}
+
+.bio-setup-workbench {
+  padding: 20px;
+}
+
+.bio-setup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.bio-setup-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.95fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.bio-setup-stage-col,
+.bio-setup-side-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bio-socratic-box {
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid hsla(36, 92%, 42%, 0.35);
+  background: var(--chem-warn-soft);
+}
+
+.bio-ledger-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.bio-ledger-tile {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bio-ledger-key {
+  font-size: 0.71rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.bio-ledger-val {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.bio-perturb-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bio-perturb-btn {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 11px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--transition-fast);
+}
+
+.bio-perturb-btn:hover {
+  border-color: var(--accent-primary);
+}
+
+.bio-perturb-btn.active {
+  border-color: var(--accent-primary);
+  background: var(--accent-primary-soft);
+}
+
+.bio-calc-summary {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-code);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.82rem;
+}
+
+.bio-calc-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* Active Revision Arena */
+.bio-cloze-card-prompt {
+  padding: 18px;
+  border-radius: var(--radius-md);
+  background: var(--bg-code);
+  border: 1px solid var(--border-subtle);
+  font-size: 1.06rem;
+  line-height: 1.7;
+  font-weight: 500;
+}
+
+.bio-cloze-blank {
+  display: inline-block;
+  padding: 0 10px;
+  margin: 0 2px;
+  border-radius: 5px;
+  background: var(--accent-primary-soft);
+  border: 1px dashed var(--accent-primary);
+  color: var(--accent-primary);
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.bio-cloze-revealed {
+  display: inline-block;
+  padding: 0 8px;
+  margin: 0 2px;
+  border-radius: 5px;
+  background: var(--chem-lg-soft);
+  border: 1px solid var(--chem-lg);
+  color: var(--chem-lg);
+  font-weight: 700;
+}
+
+.bio-wordswap-stem {
+  padding: 18px;
+  border-radius: var(--radius-md);
+  background: var(--bg-code);
+  border-left: 4px solid var(--chem-warn);
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.bio-ws-choice-btn {
+  flex: 1 1 220px;
+  padding: 12px 14px;
+}
+
+.bio-ws-choice-btn.ws-ok {
+  border-color: var(--chem-lg);
+  background: var(--chem-lg-soft);
+  color: var(--chem-lg);
+}
+
+.bio-swap-diff {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  font-size: 0.84rem;
+}
+
+.swap-bad {
+  color: var(--chem-danger);
+  font-weight: 700;
+}
+
+.swap-good {
+  color: var(--chem-lg);
+  font-weight: 700;
+}
+
+.bio-seq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bio-seq-item {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-subtle);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all var(--transition-fast);
+}
+
+.bio-seq-item:hover {
+  border-color: var(--accent-primary);
+  background: var(--accent-primary-soft);
+}
+
+.bio-seq-item.placed {
+  background: var(--bg-surface);
+}
+
+.bio-seq-item.seq-ok {
+  border-color: var(--chem-lg);
+  background: var(--chem-lg-soft);
+}
+
+.bio-seq-item.seq-err {
+  border-color: var(--chem-danger);
+  background: var(--chem-danger-soft);
+}
+
+.bio-snapshot-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+/* Doubt Notebook & Multi-Source Q&A Hub */
+.bio-doubt-qa-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.15fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.bio-doubt-col,
+.bio-qa-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bio-doubt-thread,
+.bio-notebook-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 460px;
+  overflow-y: auto;
+}
+
+.bio-doubt-msg,
+.bio-notebook-item {
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-subtle);
+}
+
+.bio-notebook-item.is-pinned {
+  border-color: var(--accent-primary);
+  background: var(--accent-primary-soft);
+}
+
+@media (max-width: 1020px) {
+  .bio-setup-grid,
+  .bio-doubt-qa-layout,
+  .bio-snapshot-grid,
+  .bio-btl-grid {
+    grid-template-columns: 1fr;
+  }
+}

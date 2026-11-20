@@ -56,9 +56,13 @@
             </span>
           </a>
 
-          <div class="subject-switcher-wrap">
+          <div class="subject-switcher-wrap" style="display:flex; align-items:center; gap:8px;">
             <label for="subject-switcher" class="sr-only">Select Study Subject</label>
             <select id="subject-switcher" class="subject-select" aria-label="Select Study Subject"></select>
+            <button type="button" class="icon-pill-btn bio-quick-pill" id="quick-biology-btn" title="Switch to Biology NCERT Mastery Lab (Reader, Concept Setups, Revision & Doubt Hub)">
+              <span aria-hidden="true">🧬</span>
+              <span>Biology NCERT</span>
+            </button>
           </div>
         </div>
 
@@ -108,7 +112,7 @@
 
       <!-- Primary Workspace Navigation -->
       <nav class="primary-nav" aria-label="Primary Workspace">
-        <div class="primary-nav-inner">
+        <div class="primary-nav-inner" id="primary-nav-inner">
           <button type="button" class="nav-tab active" data-tab="explorer" id="tab-explorer">
             Reaction &amp; Mechanism Explorer
           </button>

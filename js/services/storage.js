@@ -21,14 +21,19 @@ const DEFAULT_STUDY_STATE = {
   cbtTheme: null, // null => follow app theme, or explicit 'light' | 'dark' for NTA portal
   activeSubjectId: 'organic-chemistry',
   mastery: {}, // { [reactionId]: 'mastered' | 'review' | 'tricky' | 'unseen' }
-  bookmarks: [], // array of reactionId
+  bookmarks: [], // array of reactionId / bioLineId
   customSubjects: [], // user-created subjects
   customReactions: [], // user-created or AI-generated reaction/study cards
   quizStats: {
     attempted: 0,
     correct: 0,
     streak: 0
-  }
+  },
+  // Biology NCERT Mastery Suite persistence
+  bioLineMastery: {}, // { [lineId]: 'mastered' | 'review' | 'tricky' | 'unseen' }
+  bioCustomModules: {}, // { [chapterId]: Array<NcertLineEntry> }
+  bioDoubtNotebook: [], // Array<{ id, chapterId, ncertLineRef, question, answer, createdAt, pinned }>
+  bioSetupProgress: {} // { [setupId]: { completedCheckpoints: string[], notes: string } }
 };
 
 export function getRuntimeFallbackApiKey() {
@@ -126,7 +131,11 @@ export function loadStudyState() {
       bookmarks: Array.isArray(parsed.bookmarks) ? parsed.bookmarks : [],
       customSubjects: Array.isArray(parsed.customSubjects) ? parsed.customSubjects : [],
       customReactions: Array.isArray(parsed.customReactions) ? parsed.customReactions : [],
-      quizStats: { ...DEFAULT_STUDY_STATE.quizStats, ...(parsed.quizStats || {}) }
+      quizStats: { ...DEFAULT_STUDY_STATE.quizStats, ...(parsed.quizStats || {}) },
+      bioLineMastery: { ...(parsed.bioLineMastery || {}) },
+      bioCustomModules: parsed.bioCustomModules && typeof parsed.bioCustomModules === 'object' ? parsed.bioCustomModules : {},
+      bioDoubtNotebook: Array.isArray(parsed.bioDoubtNotebook) ? parsed.bioDoubtNotebook : [],
+      bioSetupProgress: parsed.bioSetupProgress && typeof parsed.bioSetupProgress === 'object' ? parsed.bioSetupProgress : {}
     };
   } catch {
     return {
@@ -144,7 +153,7 @@ export function exportBackupJson(state) {
   const payload = {
     exportedAt: new Date().toISOString(),
     app: 'Super Study',
-    version: 1,
+    version: 2,
     studyState: {
       theme: state.theme,
       activeSubjectId: state.activeSubjectId,
@@ -152,7 +161,11 @@ export function exportBackupJson(state) {
       bookmarks: state.bookmarks,
       customSubjects: state.customSubjects,
       customReactions: state.customReactions,
-      quizStats: state.quizStats
+      quizStats: state.quizStats,
+      bioLineMastery: state.bioLineMastery || {},
+      bioCustomModules: state.bioCustomModules || {},
+      bioDoubtNotebook: state.bioDoubtNotebook || [],
+      bioSetupProgress: state.bioSetupProgress || {}
     }
   };
   return JSON.stringify(payload, null, 2);
@@ -171,7 +184,11 @@ export function importBackupJson(jsonText) {
     bookmarks: Array.isArray(incoming.bookmarks) ? incoming.bookmarks : [],
     customSubjects: Array.isArray(incoming.customSubjects) ? incoming.customSubjects : [],
     customReactions: Array.isArray(incoming.customReactions) ? incoming.customReactions : [],
-    quizStats: { ...DEFAULT_STUDY_STATE.quizStats, ...(incoming.quizStats || {}) }
+    quizStats: { ...DEFAULT_STUDY_STATE.quizStats, ...(incoming.quizStats || {}) },
+    bioLineMastery: { ...(incoming.bioLineMastery || {}) },
+    bioCustomModules: incoming.bioCustomModules && typeof incoming.bioCustomModules === 'object' ? incoming.bioCustomModules : {},
+    bioDoubtNotebook: Array.isArray(incoming.bioDoubtNotebook) ? incoming.bioDoubtNotebook : [],
+    bioSetupProgress: incoming.bioSetupProgress && typeof incoming.bioSetupProgress === 'object' ? incoming.bioSetupProgress : {}
   };
   saveStudyState(merged);
   return merged;
